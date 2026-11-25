@@ -1,0 +1,16 @@
+# docker compose up --build   ->   http://localhost:8000
+# NOTA: no se pudo probar en la máquina de desarrollo (no tenía Docker).
+services:
+  vinoscore:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Para pasar a PostgreSQL, cambia esta línea (y agrega "psycopg[binary]" a requirements.txt):
+      DATABASE_URL: sqlite:////datos/vinoscore.db
+    volumes:
+      - vinoscore-datos:/datos
+    restart: unless-stopped
+
+volumes:
+  vinoscore-datos:
