@@ -1,0 +1,40 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "16px", "primaryColor": "#ffffff", "primaryTextColor": "#1B3A57", "primaryBorderColor": "#1B3A57", "lineColor": "#1B3A57", "clusterBkg": "#ffffff", "clusterBorder": "#0F7C7A", "edgeLabelBackground": "#ffffff"}, "flowchart": {"curve": "basis", "nodeSpacing": 70, "rankSpacing": 80, "htmlLabels": true, "wrappingWidth": 420}}}%%
+flowchart TB
+  subgraph PROTO["VERSIÓN DEL PROTOTIPO: lo que existe hoy, todo en una computadora"]
+    direction TB
+    PE["<b>App de la enóloga</b><br/>web instalable en el celular<br/>guarda sin conexión"]
+    PS["<b>Web de Sergio</b><br/>escritorio"]
+    PA["<b>Servicio del modelo</b><br/>API FastAPI + Random Forest"]
+    PD[("<b>Base de datos</b><br/>SQLite local")]
+    PE -- "<b>1 guarda el análisis</b><br/><b>2 pide evaluación</b><br/>(un solo envío)" --> PA
+    PA -- "<b>3 probabilidad,<br/>semáforo y razones</b>" --> PE
+    PS -- "<b>4 consulta y decide</b>" --> PA
+    PA <-- "guarda y lee" --> PD
+  end
+
+  subgraph OBJ["VERSIÓN OBJETIVO: producción en la nube"]
+    direction TB
+    OE["<b>App móvil nativa de la enóloga</b><br/>Expo / React Native<br/>sin conexión completo + cámara"]
+    OS["<b>Web de Sergio</b><br/>Vercel o Netlify<br/>dominio + HTTPS"]
+    OA["<b>Servicio del modelo</b><br/>API en Render, Railway o Fly.io"]
+    OD[("<b>Base de datos en la nube</b><br/>PostgreSQL (Supabase)<br/>usuarios, roles y respaldos diarios")]
+    OM["Monitoreo de errores<br/>(Sentry)"]
+    OE -- "<b>1 guarda el análisis</b>" --> OD
+    OE -- "<b>2 pide evaluación</b>" --> OA
+    OA -- "<b>3 probabilidad<br/>y semáforo</b>" --> OE
+    OA <-- "lee y guarda<br/>el resultado" --> OD
+    OS -- "<b>4 consulta y decide</b>" --> OD
+    OS -. "perilla y simulador" .-> OA
+    OA -.-> OM
+  end
+
+  PROTO ~~~ OBJ
+
+  classDef app fill:#ffffff,stroke:#0F7C7A,stroke-width:3px,color:#1B3A57
+  classDef api fill:#1B3A57,stroke:#1B3A57,stroke-width:2px,color:#ffffff
+  classDef bd fill:#FBF1DD,stroke:#E09F3E,stroke-width:3px,color:#1B3A57
+  classDef aux fill:#F4F6F8,stroke:#9AA9B8,stroke-dasharray:4 3,color:#4A5A6A
+  class PE,OE,PS,OS app
+  class PA,OA api
+  class PD,OD bd
+  class OM aux
