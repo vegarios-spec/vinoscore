@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { guardarLocal, leerLocal } from "./almacen";
 import { api } from "./api";
 import type { Rol } from "./Cabecera";
 import type { Variable } from "./tipos";
@@ -13,7 +14,7 @@ function leerRol(): Rol {
   // Se puede abrir directo con ?rol=sergio (útil para compartir el enlace).
   const url = new URLSearchParams(location.search).get("rol");
   if (url === "sergio" || url === "enologa") return url;
-  const guardado = localStorage.getItem(LS_ROL);
+  const guardado = leerLocal(LS_ROL);
   if (guardado === "sergio" || guardado === "enologa") return guardado;
   // La primera vez: en pantalla ancha se abre como Sergio; en el celular, como la enóloga.
   return window.matchMedia("(min-width: 1024px)").matches ? "sergio" : "enologa";
@@ -21,10 +22,10 @@ function leerRol(): Rol {
 
 export default function App() {
   const [rol, setRol] = useState<Rol>(leerRol);
-  const [nombre, setNombre] = useState(() => localStorage.getItem(LS_NOMBRE) ?? "Enóloga");
+  const [nombre, setNombre] = useState(() => leerLocal(LS_NOMBRE) ?? "Enóloga");
   const [variables, setVariables] = useState<Variable[] | null>(() => {
     try {
-      return JSON.parse(localStorage.getItem(LS_VARIABLES) ?? "null");
+      return JSON.parse(leerLocal(LS_VARIABLES) ?? "null");
     } catch {
       return null;
     }
@@ -36,13 +37,13 @@ export default function App() {
       .variables()
       .then((v) => {
         setVariables(v);
-        localStorage.setItem(LS_VARIABLES, JSON.stringify(v));
+        guardarLocal(LS_VARIABLES, JSON.stringify(v));
       })
       .catch(() => undefined);
   }, []);
 
-  useEffect(() => localStorage.setItem(LS_ROL, rol), [rol]);
-  useEffect(() => localStorage.setItem(LS_NOMBRE, nombre), [nombre]);
+  useEffect(() => guardarLocal(LS_ROL, rol), [rol]);
+  useEffect(() => guardarLocal(LS_NOMBRE, nombre), [nombre]);
 
   return rol === "enologa" ? (
     <VistaEnologa variables={variables} nombre={nombre} onNombre={setNombre} rol={rol} onRol={setRol} />

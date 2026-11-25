@@ -1,42 +1,68 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/newsreader/opsz.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
 
-@theme {
-  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* Títulos y cifras grandes: serif con ajuste óptico, en pesos ligeros */
-  --font-display: "Newsreader Variable", "Georgia", "Times New Roman", serif;
+/*
+ * VinoScore como herramienta: monocromo, esquinas rectas, una sola familia.
+ * El color solo significa datos (semáforo). Oscuro por defecto; claro con data-tema="claro".
+ */
+:root {
+  color-scheme: dark;
+  --fondo: #141516;
+  --superficie: #1c1d1f;
+  --realce: #232427; /* fila seleccionada o al pasar el cursor */
+  --linea: #2e3033;
+  --linea-fuerte: #4a4d52;
+  --texto: #ececea;
+  --suave: #9c9ea1;
+  --verde: #6cbf78;
+  --ambar: #e3b341;
+  --rojo: #e8685a;
+}
 
-  /* Paleta de la presentación, usada con más disciplina */
-  --color-noche: #11283d;
-  --color-marino: #1b3a57;
-  --color-marino-claro: #2c5478;
-  --color-turquesa: #0f7c7a;
-  --color-turquesa-oscuro: #0a5f5d;
-  --color-ambar: #e09f3e; /* el ámbar de la marca: solo detalles pequeños */
-  --color-laton: #b98a3e; /* ámbar apagado, para filetes y marcas finas */
-  --color-ambar-claro: #f6ecd8;
-  --color-papel: #f4f6f8;
-  --color-hielo: #e8edf2;
-  --color-tinta: #14212e;
-  --color-suave: #4a5a6a;
-  --color-borde: #d3dbe3;
+:root[data-tema="claro"] {
+  color-scheme: light;
+  --fondo: #f7f7f5;
+  --superficie: #ffffff;
+  --realce: #efefec;
+  --linea: #dadad7;
+  --linea-fuerte: #a9aaa6;
+  --texto: #17181a;
+  --suave: #5e6064;
+  --verde: #2f7a3b;
+  --ambar: #8a6100;
+  --rojo: #b3372b;
+}
 
-  /* Semáforo: relleno, versión clara y tinta oscura (contraste AA). Siempre con texto. */
-  --color-verde: #4e8b3a;
-  --color-verde-claro: #eaf2e6;
-  --color-verde-texto: #2a561b;
-  --color-amarillo: #e0a11b;
-  --color-amarillo-claro: #fbf3dc;
-  --color-amarillo-texto: #6a4800;
-  --color-rojo: #c0392b;
-  --color-rojo-claro: #f8e8e5;
-  --color-rojo-texto: #8a2216;
+@theme inline {
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-realce: var(--realce);
+  --color-linea: var(--linea);
+  --color-linea-fuerte: var(--linea-fuerte);
+  --color-texto: var(--texto);
+  --color-suave: var(--suave);
+  --color-verde: var(--verde);
+  --color-ambar: var(--ambar);
+  --color-rojo: var(--rojo);
+  /* Botón principal: el color del texto como fondo */
+  --color-primario: var(--texto);
+  --color-sobre-primario: var(--fondo);
+
+  /* Escala tipográfica: 12 / 14 / 16 / 20 / 28 / 44 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.75rem;
 }
 
 html {
-  background: var(--color-papel);
-  color: var(--color-tinta);
+  background: var(--fondo);
+  color: var(--texto);
   font-family: var(--font-sans);
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
@@ -45,19 +71,19 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
+  background: var(--fondo);
 }
 
-/* Títulos y cifras: serif ligera, con números alineados (no "de texto") */
-.font-display {
-  font-family: var(--font-display);
-  font-optical-sizing: auto;
-  font-variant-numeric: lining-nums;
-  letter-spacing: -0.012em;
+/* Ninguna esquina redonda, en ningún lado (regla del dueño). */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-laton);
-  outline-offset: 3px;
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
 }
 
 .tabular {
@@ -65,81 +91,43 @@ body {
 }
 
 input[type="range"] {
-  accent-color: var(--color-marino);
+  accent-color: var(--texto);
 }
 
-/* Campos: fondo blanco, filete fino y foco turquesa */
+/* Campos: rectos, fondo de superficie y borde que se marca al enfocar */
 .campo {
-  min-height: 3.25rem;
+  min-height: 3rem;
   width: 100%;
-  border-radius: 0.625rem;
-  border: 1px solid var(--color-borde);
-  background: #fff;
-  padding: 0 0.9rem;
-  font-size: 1.0625rem;
-  color: var(--color-tinta);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  border: 1px solid var(--linea-fuerte);
+  background: var(--superficie);
+  padding: 0 0.85rem;
+  font-size: 1rem;
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.12s;
 }
 .campo::placeholder {
-  color: #78899a;
+  color: var(--suave);
+  opacity: 0.8;
 }
 .campo:hover {
-  border-color: #aebbc8;
+  border-color: var(--suave);
 }
 .campo:focus {
-  border-color: var(--color-turquesa);
-  box-shadow: 0 0 0 3px rgb(15 124 122 / 0.16);
-  outline: none;
+  border-color: var(--texto);
+  outline: 1px solid var(--texto);
+  outline-offset: 0;
 }
 .campo[aria-invalid="true"] {
-  border-color: var(--color-rojo);
-  box-shadow: 0 0 0 3px rgb(192 57 43 / 0.12);
+  border-color: var(--rojo);
 }
 .campo-aviso {
-  border-color: var(--color-amarillo);
-  box-shadow: 0 0 0 3px rgb(224 161 27 / 0.16);
-}
-
-/* El sello se asienta una sola vez cuando aparece el resultado */
-@keyframes sellar {
-  0% {
-    transform: scale(1.14) rotate(-7deg);
-    opacity: 0;
-  }
-  60% {
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1) rotate(-3deg);
-    opacity: 1;
-  }
-}
-.sello-estampa {
-  transform: rotate(-3deg);
-  animation: sellar 0.7s cubic-bezier(0.22, 0.8, 0.3, 1) 0.15s both;
-}
-
-/* El panel lateral entra desde la derecha al abrirlo */
-@keyframes entra {
-  from {
-    transform: translateX(24px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-.panel-entra {
-  animation: entra 0.22s ease-out both;
+  border-color: var(--ambar);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sello-estampa,
-  .panel-entra {
-    animation: none;
-  }
   * {
     transition-duration: 0.01ms !important;
+    animation: none !important;
   }
 }

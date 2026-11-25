@@ -1,38 +1,49 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { Razon, Semaforo } from "./tipos";
-import { SelloMini } from "./Sello";
 import { SEMAFORO } from "./util";
 
-type Variante = "primario" | "secundario" | "ambar" | "borde" | "claro";
+type Variante = "primario" | "secundario" | "fantasma";
+/** Nombres del diseño anterior; se quitan cuando las vistas terminen de migrar. */
+type VarianteVieja = "ambar" | "borde" | "claro";
 
 const VARIANTES: Record<Variante, string> = {
-  primario: "bg-marino text-white hover:bg-noche",
-  secundario: "bg-turquesa text-white hover:bg-turquesa-oscuro",
-  // "Ambar" ahora es el botón de latón: blanco con filete dorado
-  ambar: "border border-laton bg-white text-noche hover:bg-ambar-claro",
-  borde: "border border-marino bg-transparent text-marino hover:bg-hielo",
-  claro: "bg-hielo text-marino hover:bg-borde",
+  primario: "bg-primario text-sobre-primario hover:opacity-90",
+  secundario: "border border-linea-fuerte bg-transparent text-texto hover:bg-realce",
+  fantasma: "bg-transparent text-texto hover:bg-realce",
 };
+const EQUIVALE: Record<VarianteVieja, Variante> = { ambar: "secundario", borde: "secundario", claro: "fantasma" };
 
 export function Boton({
   variante = "primario", grande = false, className = "", ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: Variante; grande?: boolean }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: Variante | VarianteVieja; grande?: boolean }) {
+  const v = variante in EQUIVALE ? EQUIVALE[variante as VarianteVieja] : (variante as Variante);
   return (
     <button
       {...props}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-5 font-semibold tracking-[0.01em] transition
-        disabled:cursor-not-allowed disabled:opacity-45
-        ${grande ? "min-h-14 text-lg" : "min-h-11 text-[0.95rem]"} ${VARIANTES[variante]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 px-4 font-medium transition-colors
+        disabled:cursor-not-allowed disabled:opacity-40
+        ${grande ? "min-h-14 text-base" : "min-h-10 text-sm"} ${VARIANTES[v]} ${className}`}
     />
   );
 }
 
-/** Semáforo en una línea: sello pequeño y la palabra. */
-export function InsigniaSemaforo({ semaforo, tam = 28 }: { semaforo: Semaforo | null; tam?: number }) {
+const COLOR_MARCADOR: Record<Semaforo | "pendiente", string> = {
+  verde: "bg-verde",
+  amarillo: "bg-ambar",
+  rojo: "bg-rojo",
+  pendiente: "border border-suave bg-transparent",
+};
+
+/** Cuadro sólido del color del semáforo. Siempre acompaña a una palabra. */
+export function Marcador({ tipo, tam = 10 }: { tipo: Semaforo | "pendiente"; tam?: number }) {
+  return <span aria-hidden className={`inline-block shrink-0 ${COLOR_MARCADOR[tipo]}`} style={{ width: tam, height: tam }} />;
+}
+
+export function InsigniaSemaforo({ semaforo, tam = 10 }: { semaforo: Semaforo | null; tam?: number }) {
   if (!semaforo) return <span className="text-suave">Sin evaluar</span>;
   return (
-    <span className={`inline-flex items-center gap-2 font-semibold ${SEMAFORO[semaforo].texto}`}>
-      <SelloMini tipo={semaforo} tam={tam} />
+    <span className="inline-flex items-center gap-2 font-medium text-texto">
+      <Marcador tipo={semaforo} tam={tam} />
       {SEMAFORO[semaforo].etiqueta}
     </span>
   );
@@ -40,56 +51,74 @@ export function InsigniaSemaforo({ semaforo, tam = 28 }: { semaforo: Semaforo | 
 
 export function InsigniaDemo() {
   return (
-    <span className="rounded border border-laton px-1.5 py-px text-[0.68rem] font-semibold tracking-[0.12em] text-amber-900">
-      DEMO
+    <span className="border border-linea-fuerte px-1 text-[0.6875rem] font-medium leading-4 text-suave" title="Dato de demostración">
+      Demo
     </span>
   );
 }
 
-/** Lo que más pesó en el resultado, como notas de cata. */
-export function ListaRazones({ razones, nota, oscuro = false }: { razones: Razon[]; nota?: string; oscuro?: boolean }) {
+/**
+ * Barra recta de 0 a 100 %. El relleno lleva el color del semáforo; las líneas
+ * verticales marcan el umbral activo y, si se dan, otras referencias (p. ej. el valor original).
+ */
+export function BarraProbabilidad({
+  p, semaforo, umbral, alto = 6, marcas = [],
+}: { p: number; semaforo: Semaforo; umbral: number; alto?: number; marcas?: number[] }) {
+  const relleno = { verde: "bg-verde", amarillo: "bg-ambar", rojo: "bg-rojo" }[semaforo];
   return (
-    <div>
-      <h3 className={`font-display text-[1.65rem] font-medium leading-tight ${oscuro ? "text-white" : "text-marino"}`}>Lo que más pesó</h3>
-      <ul className={`mt-3 divide-y border-y ${oscuro ? "divide-white/15 border-white/15" : "divide-borde border-borde"}`}>
+    <div className="relative w-full bg-linea" style={{ height: alto }} aria-hidden>
+      <div className={`h-full ${relleno}`} style={{ width: `${Math.round(p * 100)}%` }} />
+      <span className="absolute -inset-y-1 w-px bg-texto" style={{ left: `${umbral * 100}%` }} />
+      {marcas.map((m) => (
+        <span key={m} className="absolute -inset-y-1 w-px bg-suave" style={{ left: `${m * 100}%` }} />
+      ))}
+    </div>
+  );
+}
+
+/** Factores que más pesaron en el resultado. */
+export function ListaRazones({ razones, nota }: { razones: Razon[]; nota?: string; oscuro?: boolean }) {
+  return (
+    <section>
+      <h3 className="text-base font-medium text-texto">Factores principales</h3>
+      <ul className="mt-2 divide-y divide-linea border-y border-linea">
         {razones.map((r) => (
-          <li key={r.variable} className="flex items-center gap-3.5 py-3.5">
+          <li key={r.variable} className="flex items-baseline gap-3 py-2.5">
             <span
               aria-hidden
-              className={`inline-flex size-6 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white
-                ${r.efecto === "favorece" ? "bg-verde" : r.efecto === "resta" ? "bg-rojo" : "bg-suave"}`}
+              className={`w-4 shrink-0 text-center font-semibold ${r.efecto === "favorece" ? "text-verde" : r.efecto === "resta" ? "text-rojo" : "text-suave"}`}
             >
               {r.efecto === "favorece" ? "+" : r.efecto === "resta" ? "−" : "·"}
             </span>
-            <span className="text-[1.02rem]">{r.texto}</span>
+            <span className="text-sm">{r.texto}</span>
           </li>
         ))}
       </ul>
-      <p className={`mt-2.5 text-sm ${oscuro ? "text-white/70" : "text-suave"}`}>
+      <p className="mt-2 text-xs text-suave">
         {nota ?? "Explicación aproximada: indica en qué se parece o se aleja el lote de un vino bueno típico."}
       </p>
-    </div>
+    </section>
   );
 }
 
 export function Avisos({ avisos }: { avisos: string[] }) {
   if (!avisos.length) return null;
   return (
-    <div role="alert" className="rounded-lg border border-amarillo/50 border-l-4 border-l-amarillo bg-amarillo-claro p-4 text-amarillo-texto">
-      <p className="font-semibold">Revisa estos datos</p>
-      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
+    <div role="alert" className="border-l-2 border-ambar bg-superficie px-4 py-3 text-sm">
+      <p className="font-medium">Revisar estos datos</p>
+      <ul className="mt-1 list-disc space-y-0.5 pl-5 text-suave">
         {avisos.map((a) => (
           <li key={a}>{a}</li>
         ))}
       </ul>
-      <p className="mt-1 text-sm">El lote se guardó de todos modos.</p>
+      <p className="mt-1 text-suave">El lote se guardó de todos modos.</p>
     </div>
   );
 }
 
 export function Cargando({ texto = "Cargando…" }: { texto?: string }) {
   return (
-    <p role="status" className="py-10 text-center text-suave">
+    <p role="status" className="py-8 text-center text-sm text-suave">
       {texto}
     </p>
   );
@@ -97,18 +126,18 @@ export function Cargando({ texto = "Cargando…" }: { texto?: string }) {
 
 export function ErrorCaja({ children }: { children: ReactNode }) {
   return (
-    <div role="alert" className="rounded-lg border border-rojo/40 border-l-4 border-l-rojo bg-rojo-claro p-4 font-medium text-rojo-texto">
+    <div role="alert" className="border-l-2 border-rojo bg-superficie px-4 py-3 text-sm font-medium">
       {children}
     </div>
   );
 }
 
-/** Una pantalla vacía es una invitación a actuar. */
+/** Una zona vacía dice qué falta y qué hacer. */
 export function Vacio({ titulo, children }: { titulo: string; children?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-borde bg-white p-10 text-center">
-      <p className="font-display text-2xl font-medium text-marino">{titulo}</p>
-      {children && <div className="mx-auto mt-2 max-w-md text-suave">{children}</div>}
+    <div className="border border-linea px-6 py-10 text-center">
+      <p className="text-base font-medium">{titulo}</p>
+      {children && <div className="mx-auto mt-2 max-w-md text-sm text-suave">{children}</div>}
     </div>
   );
 }
