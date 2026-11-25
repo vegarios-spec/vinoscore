@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@theme {
+  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Paleta de la presentación */
+  --color-marino: #1b3a57;
+  --color-marino-claro: #2c5478;
+  --color-turquesa: #0f7c7a;
+  --color-turquesa-oscuro: #0a5f5d;
+  --color-ambar: #e09f3e;
+  --color-fondo: #f4f6f8;
+  --color-tinta: #1b2733;
+  --color-suave: #4a5a6a;
+  --color-borde: #d5dde5;
+
+  /* Semáforo: color de relleno + versión clara + texto oscuro (contraste AA) */
+  --color-verde: #4e8b3a;
+  --color-verde-claro: #e7f1e2;
+  --color-verde-texto: #2a561b;
+  --color-amarillo: #e0a11b;
+  --color-amarillo-claro: #fcf1d4;
+  --color-amarillo-texto: #6a4800;
+  --color-rojo: #c0392b;
+  --color-rojo-claro: #f9e4e1;
+  --color-rojo-texto: #8a2216;
+}
+
+html {
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* Foco visible para teclado */
+:focus-visible {
+  outline: 3px solid var(--color-ambar);
+  outline-offset: 2px;
+}
+
+/* Números alineados en tablas y gráficas */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+  accent-color: var(--color-turquesa);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

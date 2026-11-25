@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="VinoScore">
+  <rect width="512" height="512" rx="104" fill="#1B3A57"/>
+  <!-- copa de vino blanco -->
+  <path d="M168 120h176c0 92-30 150-88 150s-88-58-88-150z" fill="#F4F6F8"/>
+  <path d="M174 168h164c-4 62-28 102-82 102s-78-40-82-102z" fill="#E09F3E"/>
+  <rect x="244" y="268" width="24" height="96" rx="6" fill="#F4F6F8"/>
+  <rect x="190" y="360" width="132" height="24" rx="12" fill="#F4F6F8"/>
+  <!-- punto verde: "prometedor" -->
+  <circle cx="392" cy="128" r="36" fill="#4E8B3A" stroke="#F4F6F8" stroke-width="12"/>
+</svg>
