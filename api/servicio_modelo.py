@@ -124,6 +124,10 @@ def razones(valores: dict[str, float], n: int = 3) -> list[dict]:
 
     candidatas = []
     for clave in ORDEN_MODELO:
+        # Si buenos y no buenos tienen casi la misma mediana (p. ej. sulfatos), la variable
+        # no distingue a un vino bueno: una "razón" sobre ella no ayudaría a nadie.
+        if abs(med_b[clave] - med_n[clave]) < 0.01 * sd[clave]:
+            continue
         v = valores[clave]
         distancia = abs(v - med_b[clave]) / sd[clave]
         candidatas.append((imp[clave] * distancia, clave))

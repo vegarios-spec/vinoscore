@@ -56,6 +56,15 @@ def test_razones_son_3_y_en_lenguaje_simple():
         assert ":" in r["texto"] and "(" in r["texto"]
 
 
+def test_nunca_hay_razones_sin_efecto():
+    """Los sulfatos tienen la misma mediana en vinos buenos y no buenos: no se explican con ellos."""
+    for sulfatos in (0.2, 0.48, 0.58, 0.9, 1.5):
+        rs = sm.razones({**VINO_NORMAL, "sulphates": sulfatos})
+        assert len(rs) == 3
+        assert all(r["efecto"] in {"favorece", "resta"} for r in rs)
+        assert "sulphates" not in {r["variable"] for r in rs}
+
+
 def test_razon_del_alcohol_alto_favorece():
     rs = sm.razones({**VINO_NORMAL, "alcohol": 12.8})
     assert rs[0]["variable"] == "alcohol"
