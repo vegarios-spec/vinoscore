@@ -46,12 +46,12 @@ sequenceDiagram
   participant B as Base de datos
 
   G->>W: Abre el tablero
-  W->>S: GET /resumen y GET /lotes
-  S->>B: Lee lotes, predicciones y decisiones
-  S-->>W: Tarjetas y lotes ordenados por probabilidad
-  W-->>G: Cuántos lotes en verde, amarillo y rojo
+  W->>S: GET /lotes y GET /configuracion
+  S->>B: Lee lotes, predicciones, decisiones y la regla activa
+  S-->>W: Lotes ordenados por probabilidad
+  W-->>G: Resumen de la semana, contadores por color y libro de lotes
 
-  G->>W: Abre la ficha de un lote
+  G->>W: Toca un lote (se abre su ficha en un panel)
   W->>S: GET /lotes/{id}
   S-->>W: Análisis, semáforo y 3 razones
 
@@ -67,8 +67,8 @@ sequenceDiagram
   S-->>W: Confirmación
   W-->>G: La decisión queda en el historial del lote
 
-  opt Perilla del dinero
-    G->>W: Escribe cuánto cuesta un falso Premium y un bueno perdido
+  opt Perilla del dinero (se abre desde la regla activa de la barra superior)
+    G->>W: Escribe cuánto cuesta un falso Premium y un bueno perdido y gira la perilla
     W->>S: GET /perilla (costo esperado por umbral)
     S-->>W: Umbral recomendado y "de cada 100 marcados Premium, X sí lo son"
     G->>W: "Activar el umbral"

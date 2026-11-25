@@ -13,22 +13,37 @@ Es el prototipo de un proyecto universitario del Tec de Monterrey para un socio 
 
 ## Cómo se ve
 
+Cada persona tiene **una sola pantalla de trabajo, sin pestañas**. Lo demás se abre encima y se cierra con la X o con Esc.
+
+El estilo es sobrio: azul noche y papel, un latón apagado en los detalles, títulos en serif ligera (Newsreader) y texto en Inter.
+
+La firma visual de VinoScore es el **sello**: cada lote recibe uno que se estampa con su resultado (Prometedor, Revisar en cata o Estándar) y cuántos de cada 100 lotes así resultan buenos. El semáforo siempre lleva texto, nunca solo color.
+
 ### La enóloga (celular)
+
+Inicio con un botón grande para capturar y sus lotes recientes. La captura va por grupos (lo básico, acidez, azúcar y sulfatos, azufre) con una barra de avance fija. El resultado ocupa toda la pantalla.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/capturas/enologa-1-formulario.png" width="240" alt="Formulario de captura"><br><sub>1. Captura de los 11 análisis</sub></td>
-    <td align="center"><img src="docs/capturas/enologa-2-aviso.png" width="240" alt="Aviso de valor fuera de lo normal"><br><sub>2. Aviso si un valor se ve raro</sub></td>
-    <td align="center"><img src="docs/capturas/enologa-3-resultado.png" width="240" alt="Resultado con semáforo"><br><sub>3. Resultado inmediato</sub></td>
+    <td align="center"><img src="docs/capturas/enologa-1-inicio.png" width="240" alt="Inicio: botón para capturar y lotes recientes"><br><sub><b>Inicio:</b> capturar y ver sus lotes</sub></td>
+    <td align="center"><img src="docs/capturas/enologa-2-captura.png" width="240" alt="Captura con aviso de valor fuera de lo normal"><br><sub><b>Captura:</b> avisa si un valor se ve raro</sub></td>
+    <td align="center"><img src="docs/capturas/enologa-3-resultado.png" width="240" alt="Resultado con sello"><br><sub><b>Resultado:</b> el sello y por qué salió así</sub></td>
   </tr>
 </table>
 
 ### Sergio (computadora)
 
+El encabezado resume la semana, y sus contadores de colores **son también los filtros**. Abajo, el libro de lotes agrupado por semáforo. Un lote abre su ficha en un panel lateral (con decisión y simulador); la regla activa de la barra superior abre la perilla.
+
+![Tablero de Sergio](docs/capturas/sergio-1-tablero.png)
+
 | | |
 |---|---|
-| ![Tablero](docs/capturas/sergio-1-tablero.png)<br>**Tablero:** lotes ordenados por probabilidad, con filtros y exportación a CSV | ![Ficha del lote](docs/capturas/sergio-2-ficha.png)<br>**Ficha del lote:** análisis, semáforo, razones y decisión |
-| ![Perilla del dinero](docs/capturas/sergio-3-perilla.png)<br>**Perilla del dinero:** el costo esperado de cada regla | ![Simulador](docs/capturas/sergio-4-simulador.png)<br>**¿Qué pasa si…?:** mover alcohol, densidad o cloruros |
+| ![Ficha del lote](docs/capturas/sergio-2-ficha.png)<br>**Ficha del lote:** sello, razones y decisión | ![Simulador](docs/capturas/sergio-3-simulador.png)<br>**¿Qué pasa si…?** Dentro de la ficha: mover alcohol, densidad o cloruros |
+
+![La perilla del dinero](docs/capturas/sergio-4-perilla.png)
+
+**La perilla del dinero** es una perilla de verdad: se gira con el ratón, con el dedo o con las flechas del teclado. Muestra qué pasaría con cada regla y marca la más barata con un rombo ámbar.
 
 *Los lotes `DEMO-xx` son datos de demostración: vinos reales del conjunto de pruebas del modelo, no lotes de la bodega.*
 
@@ -55,7 +70,7 @@ El script crea el entorno de Python, instala lo necesario, compila la web, carga
 | Quién | Dirección |
 |---|---|
 | Enóloga | <http://localhost:8000> |
-| Sergio | <http://localhost:8000/?rol=sergio> (o el botón "Sergio" arriba) |
+| Sergio | <http://localhost:8000/?rol=sergio> (o, desde el menú de perfil de la esquina, "Sergio") |
 | Documentación de la API | <http://localhost:8000/docs> |
 
 Opciones: `.\iniciar.ps1 -SinDemo` (sin datos de demostración), `-Puerto 9000`, `-Reconstruir` (volver a compilar la web). En Mac/Linux: `SIN_DEMO=1`, `PUERTO=9000`, `RECONSTRUIR=1`.

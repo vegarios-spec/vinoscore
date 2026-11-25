@@ -1,22 +1,17 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { Razon, Semaforo } from "./tipos";
-import { SEMAFORO, fraseProbabilidad } from "./util";
+import { SelloMini } from "./Sello";
+import { SEMAFORO } from "./util";
 
-export function Tarjeta({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <section className={`rounded-2xl border border-borde bg-white p-4 shadow-sm sm:p-5 ${className}`}>
-      {children}
-    </section>
-  );
-}
-
-type Variante = "primario" | "secundario" | "borde" | "peligro";
+type Variante = "primario" | "secundario" | "ambar" | "borde" | "claro";
 
 const VARIANTES: Record<Variante, string> = {
-  primario: "bg-marino text-white hover:bg-marino-claro",
+  primario: "bg-marino text-white hover:bg-noche",
   secundario: "bg-turquesa text-white hover:bg-turquesa-oscuro",
-  borde: "border border-marino bg-white text-marino hover:bg-fondo",
-  peligro: "bg-rojo text-white hover:bg-rojo-texto",
+  // "Ambar" ahora es el botón de latón: blanco con filete dorado
+  ambar: "border border-laton bg-white text-noche hover:bg-ambar-claro",
+  borde: "border border-marino bg-transparent text-marino hover:bg-hielo",
+  claro: "bg-hielo text-marino hover:bg-borde",
 };
 
 export function Boton({
@@ -25,78 +20,52 @@ export function Boton({
   return (
     <button
       {...props}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 font-semibold transition-colors
-        disabled:cursor-not-allowed disabled:opacity-50
-        ${grande ? "min-h-14 text-lg" : "min-h-11 text-base"} ${VARIANTES[variante]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-5 font-semibold tracking-[0.01em] transition
+        disabled:cursor-not-allowed disabled:opacity-45
+        ${grande ? "min-h-14 text-lg" : "min-h-11 text-[0.95rem]"} ${VARIANTES[variante]} ${className}`}
     />
   );
 }
 
-/** Etiqueta pequeña del semáforo: punto de color + palabra. */
-export function InsigniaSemaforo({ semaforo }: { semaforo: Semaforo | null }) {
+/** Semáforo en una línea: sello pequeño y la palabra. */
+export function InsigniaSemaforo({ semaforo, tam = 28 }: { semaforo: Semaforo | null; tam?: number }) {
   if (!semaforo) return <span className="text-suave">Sin evaluar</span>;
-  const s = SEMAFORO[semaforo];
   return (
-    <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ${s.fondo} ${s.texto}`}>
-      <span aria-hidden className={`inline-flex size-5 items-center justify-center rounded-full text-xs text-white ${s.relleno}`}>
-        {s.icono}
-      </span>
-      {s.etiqueta}
+    <span className={`inline-flex items-center gap-2 font-semibold ${SEMAFORO[semaforo].texto}`}>
+      <SelloMini tipo={semaforo} tam={tam} />
+      {SEMAFORO[semaforo].etiqueta}
     </span>
   );
 }
 
 export function InsigniaDemo() {
   return (
-    <span className="rounded-md border border-ambar bg-amber-50 px-1.5 py-0.5 text-xs font-bold tracking-wide text-amber-900">
+    <span className="rounded border border-laton px-1.5 py-px text-[0.68rem] font-semibold tracking-[0.12em] text-amber-900">
       DEMO
     </span>
   );
 }
 
-/** Semáforo grande con la palabra y la probabilidad dicha en palabras. */
-export function SemaforoGrande({ semaforo, probabilidad }: { semaforo: Semaforo; probabilidad: number }) {
-  const s = SEMAFORO[semaforo];
-  return (
-    <div className={`flex items-center gap-4 rounded-2xl border-2 p-4 ${s.fondo} ${s.borde}`} role="status" aria-live="polite">
-      <div
-        aria-hidden
-        className={`flex size-24 shrink-0 items-center justify-center rounded-full text-6xl font-extrabold text-white ${s.relleno}`}
-      >
-        {s.icono}
-      </div>
-      <div>
-        <p className={`text-3xl font-extrabold leading-tight ${s.texto}`}>{s.etiqueta}</p>
-        <p className="mt-1 text-base font-semibold text-tinta">{Math.round(probabilidad * 100)} de cada 100</p>
-        <p className="mt-1 text-sm text-suave">{s.significado}</p>
-      </div>
-    </div>
-  );
-}
-
-export function TextoProbabilidad({ p }: { p: number }) {
-  return <p className="text-sm text-suave">{fraseProbabilidad(p)}</p>;
-}
-
-export function ListaRazones({ razones, nota }: { razones: Razon[]; nota?: string }) {
+/** Lo que más pesó en el resultado, como notas de cata. */
+export function ListaRazones({ razones, nota, oscuro = false }: { razones: Razon[]; nota?: string; oscuro?: boolean }) {
   return (
     <div>
-      <h3 className="text-base font-bold text-marino">Por qué salió así</h3>
-      <ul className="mt-2 space-y-2">
+      <h3 className={`font-display text-[1.65rem] font-medium leading-tight ${oscuro ? "text-white" : "text-marino"}`}>Lo que más pesó</h3>
+      <ul className={`mt-3 divide-y border-y ${oscuro ? "divide-white/15 border-white/15" : "divide-borde border-borde"}`}>
         {razones.map((r) => (
-          <li key={r.variable} className="flex items-start gap-3 rounded-xl bg-fondo p-3">
+          <li key={r.variable} className="flex items-center gap-3.5 py-3.5">
             <span
               aria-hidden
-              className={`mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white
+              className={`inline-flex size-6 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white
                 ${r.efecto === "favorece" ? "bg-verde" : r.efecto === "resta" ? "bg-rojo" : "bg-suave"}`}
             >
               {r.efecto === "favorece" ? "+" : r.efecto === "resta" ? "−" : "·"}
             </span>
-            <span className="text-base">{r.texto}</span>
+            <span className="text-[1.02rem]">{r.texto}</span>
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs text-suave">
+      <p className={`mt-2.5 text-sm ${oscuro ? "text-white/70" : "text-suave"}`}>
         {nota ?? "Explicación aproximada: indica en qué se parece o se aleja el lote de un vino bueno típico."}
       </p>
     </div>
@@ -106,8 +75,8 @@ export function ListaRazones({ razones, nota }: { razones: Razon[]; nota?: strin
 export function Avisos({ avisos }: { avisos: string[] }) {
   if (!avisos.length) return null;
   return (
-    <div role="alert" className="rounded-xl border border-amarillo bg-amarillo-claro p-3 text-amarillo-texto">
-      <p className="font-bold">⚠ Revisa estos datos</p>
+    <div role="alert" className="rounded-lg border border-amarillo/50 border-l-4 border-l-amarillo bg-amarillo-claro p-4 text-amarillo-texto">
+      <p className="font-semibold">Revisa estos datos</p>
       <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
         {avisos.map((a) => (
           <li key={a}>{a}</li>
@@ -120,7 +89,7 @@ export function Avisos({ avisos }: { avisos: string[] }) {
 
 export function Cargando({ texto = "Cargando…" }: { texto?: string }) {
   return (
-    <p role="status" className="py-8 text-center text-suave">
+    <p role="status" className="py-10 text-center text-suave">
       {texto}
     </p>
   );
@@ -128,13 +97,18 @@ export function Cargando({ texto = "Cargando…" }: { texto?: string }) {
 
 export function ErrorCaja({ children }: { children: ReactNode }) {
   return (
-    <div role="alert" className="rounded-xl border border-rojo bg-rojo-claro p-3 font-medium text-rojo-texto">
+    <div role="alert" className="rounded-lg border border-rojo/40 border-l-4 border-l-rojo bg-rojo-claro p-4 font-medium text-rojo-texto">
       {children}
     </div>
   );
 }
 
-/** Mensaje visible si no hay datos de demostración ni reales. */
-export function Vacio({ children }: { children: ReactNode }) {
-  return <p className="rounded-xl border border-dashed border-borde bg-white p-6 text-center text-suave">{children}</p>;
+/** Una pantalla vacía es una invitación a actuar. */
+export function Vacio({ titulo, children }: { titulo: string; children?: ReactNode }) {
+  return (
+    <div className="rounded-xl border border-borde bg-white p-10 text-center">
+      <p className="font-display text-2xl font-medium text-marino">{titulo}</p>
+      {children && <div className="mx-auto mt-2 max-w-md text-suave">{children}</div>}
+    </div>
+  );
 }

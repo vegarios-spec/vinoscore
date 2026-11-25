@@ -1,37 +1,45 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/newsreader/opsz.css";
 
 @theme {
   --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Títulos y cifras grandes: serif con ajuste óptico, en pesos ligeros */
+  --font-display: "Newsreader Variable", "Georgia", "Times New Roman", serif;
 
-  /* Paleta de la presentación */
+  /* Paleta de la presentación, usada con más disciplina */
+  --color-noche: #11283d;
   --color-marino: #1b3a57;
   --color-marino-claro: #2c5478;
   --color-turquesa: #0f7c7a;
   --color-turquesa-oscuro: #0a5f5d;
-  --color-ambar: #e09f3e;
-  --color-fondo: #f4f6f8;
-  --color-tinta: #1b2733;
+  --color-ambar: #e09f3e; /* el ámbar de la marca: solo detalles pequeños */
+  --color-laton: #b98a3e; /* ámbar apagado, para filetes y marcas finas */
+  --color-ambar-claro: #f6ecd8;
+  --color-papel: #f4f6f8;
+  --color-hielo: #e8edf2;
+  --color-tinta: #14212e;
   --color-suave: #4a5a6a;
-  --color-borde: #d5dde5;
+  --color-borde: #d3dbe3;
 
-  /* Semáforo: color de relleno + versión clara + texto oscuro (contraste AA) */
+  /* Semáforo: relleno, versión clara y tinta oscura (contraste AA). Siempre con texto. */
   --color-verde: #4e8b3a;
-  --color-verde-claro: #e7f1e2;
+  --color-verde-claro: #eaf2e6;
   --color-verde-texto: #2a561b;
   --color-amarillo: #e0a11b;
-  --color-amarillo-claro: #fcf1d4;
+  --color-amarillo-claro: #fbf3dc;
   --color-amarillo-texto: #6a4800;
   --color-rojo: #c0392b;
-  --color-rojo-claro: #f9e4e1;
+  --color-rojo-claro: #f8e8e5;
   --color-rojo-texto: #8a2216;
 }
 
 html {
-  background: var(--color-fondo);
+  background: var(--color-papel);
   color: var(--color-tinta);
   font-family: var(--font-sans);
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
@@ -39,24 +47,99 @@ body {
   min-height: 100dvh;
 }
 
-/* Foco visible para teclado */
-:focus-visible {
-  outline: 3px solid var(--color-ambar);
-  outline-offset: 2px;
+/* Títulos y cifras: serif ligera, con números alineados (no "de texto") */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-variant-numeric: lining-nums;
+  letter-spacing: -0.012em;
 }
 
-/* Números alineados en tablas y gráficas */
+:focus-visible {
+  outline: 2px solid var(--color-laton);
+  outline-offset: 3px;
+}
+
 .tabular {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 input[type="range"] {
-  accent-color: var(--color-turquesa);
+  accent-color: var(--color-marino);
+}
+
+/* Campos: fondo blanco, filete fino y foco turquesa */
+.campo {
+  min-height: 3.25rem;
+  width: 100%;
+  border-radius: 0.625rem;
+  border: 1px solid var(--color-borde);
+  background: #fff;
+  padding: 0 0.9rem;
+  font-size: 1.0625rem;
+  color: var(--color-tinta);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.campo::placeholder {
+  color: #78899a;
+}
+.campo:hover {
+  border-color: #aebbc8;
+}
+.campo:focus {
+  border-color: var(--color-turquesa);
+  box-shadow: 0 0 0 3px rgb(15 124 122 / 0.16);
+  outline: none;
+}
+.campo[aria-invalid="true"] {
+  border-color: var(--color-rojo);
+  box-shadow: 0 0 0 3px rgb(192 57 43 / 0.12);
+}
+.campo-aviso {
+  border-color: var(--color-amarillo);
+  box-shadow: 0 0 0 3px rgb(224 161 27 / 0.16);
+}
+
+/* El sello se asienta una sola vez cuando aparece el resultado */
+@keyframes sellar {
+  0% {
+    transform: scale(1.14) rotate(-7deg);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-3deg);
+    opacity: 1;
+  }
+}
+.sello-estampa {
+  transform: rotate(-3deg);
+  animation: sellar 0.7s cubic-bezier(0.22, 0.8, 0.3, 1) 0.15s both;
+}
+
+/* El panel lateral entra desde la derecha al abrirlo */
+@keyframes entra {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.panel-entra {
+  animation: entra 0.22s ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .sello-estampa,
+  .panel-entra {
+    animation: none;
+  }
   * {
-    animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
 }
