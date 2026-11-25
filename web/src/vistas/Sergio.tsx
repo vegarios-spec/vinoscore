@@ -201,12 +201,12 @@ export function VistaSergio({
               )}
               {enTabla.length > 0 && (
                 <div className="overflow-x-auto border border-linea">
-                  <table aria-label="Lotes" className="w-full min-w-[560px] text-sm">
+                  <table aria-label="Lotes" className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-linea text-left text-xs text-suave">
                         <th scope="col" className="px-4 py-2.5 font-normal">Lote</th>
                         <th scope="col" className="hidden px-3 py-2.5 font-normal md:table-cell">Tanque</th>
-                        <th scope="col" className="hidden px-3 py-2.5 font-normal md:table-cell">Fecha</th>
+                        <th scope="col" className="hidden px-3 py-2.5 font-normal xl:table-cell">Fecha</th>
                         <th scope="col" className="px-3 py-2.5 text-right font-normal">Probabilidad</th>
                         <th scope="col" className="px-4 py-2.5 font-normal">Decisión</th>
                       </tr>
@@ -233,7 +233,8 @@ export function VistaSergio({
                               onClick={() => elegir(l)}
                               className={`cursor-pointer border-b border-linea last:border-b-0 hover:bg-realce ${sel ? "bg-realce shadow-[inset_2px_0_0_var(--texto)]" : ""}`}
                             >
-                              <td className="max-w-[16rem] px-4 py-2.5">
+                              {/* w-full + max-w-0: la columna Lote toma el espacio que sobra y recorta el código largo */}
+                              <td className="w-full max-w-0 px-4 py-2.5">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -244,16 +245,18 @@ export function VistaSergio({
                                   <span className="truncate">{l.codigo}</span>
                                   {l.es_demo && <InsigniaDemo />}
                                 </button>
+                                {/* Lo que no cabe en columnas va bajo el código: tanque y fecha en celular, fecha en laptop */}
                                 <span className="block truncate text-xs text-suave md:hidden">
                                   {[l.tanque && `Tanque ${l.tanque}`, fechaRelativa(l.fecha)].filter(Boolean).join(", ")}
                                 </span>
+                                <span className="hidden truncate text-xs text-suave md:block xl:hidden">{fechaRelativa(l.fecha)}</span>
                               </td>
-                              <td className="hidden max-w-[8rem] truncate px-3 py-2.5 text-suave md:table-cell">{l.tanque || "–"}</td>
-                              <td className="hidden whitespace-nowrap px-3 py-2.5 text-suave md:table-cell">{fechaRelativa(l.fecha)}</td>
+                              <td className="hidden max-w-[8rem] truncate whitespace-nowrap px-3 py-2.5 text-suave md:table-cell">{l.tanque || "–"}</td>
+                              <td className="hidden whitespace-nowrap px-3 py-2.5 text-suave xl:table-cell">{fechaRelativa(l.fecha)}</td>
                               <td className="px-3 py-2.5">
                                 <span className="flex items-center justify-end gap-3">
                                   {l.probabilidad !== null && l.semaforo && (
-                                    <span className="hidden w-28 sm:block">
+                                    <span className="hidden w-20 md:block lg:hidden xl:block">
                                       <BarraProbabilidad p={l.probabilidad} semaforo={l.semaforo} umbral={umbral} />
                                     </span>
                                   )}

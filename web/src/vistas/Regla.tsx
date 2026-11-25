@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import type { Configuracion, FilaPerilla, Perilla } from "../tipos";
 import { Boton } from "../ui";
-import { leerPesos, num, peso } from "../util";
+import { leerPesos, num, peso, pesosCampo } from "../util";
 
 const compacto = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", notation: "compact", maximumFractionDigits: 1 });
 const igual = (a: number, b: number) => Math.abs(a - b) < 1e-6;
@@ -154,8 +154,8 @@ export function Regla({ onConfigCambia }: { onConfigCambia: (c: Configuracion) =
       .then((c) => {
         setCfg(c);
         setUmbral(redondear(c.umbral_activo));
-        setFp(num(c.costo_falso_premium, 0));
-        setFn(num(c.costo_bueno_perdido, 0));
+        setFp(pesosCampo(c.costo_falso_premium));
+        setFn(pesosCampo(c.costo_bueno_perdido));
       })
       .catch(() => setErrorCfg("No se pudo cargar la regla activa."));
   }, []);

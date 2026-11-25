@@ -53,6 +53,16 @@ JS_ESQUINAS = """() => [...document.querySelectorAll('body *')].filter(e => {
 
 JS_DESBORDE = "() => document.documentElement.scrollWidth <= document.documentElement.clientWidth"
 
+# La tabla de lotes vive en un contenedor con desplazamiento propio: el de la página no basta.
+JS_TABLA = """() => { const t = document.querySelector('table[aria-label="Lotes"]');
+  if (!t) return null; const w = t.parentElement; return [w.scrollWidth, w.clientWidth]; }"""
+
+
+def tabla_cabe(pg: Page, donde: str) -> None:
+    medida = pg.evaluate(JS_TABLA)
+    revisar(medida is not None and medida[0] <= medida[1],
+            f"{donde}: la tabla de lotes cabe completa sin desplazarse ({medida})")
+
 
 def esquinas(pg: Page, donde: str) -> None:
     n = pg.evaluate("document.querySelectorAll('body button, body input').length")
@@ -188,6 +198,9 @@ def seccion_sergio(nav, url: str) -> None:
     if not aparece(cambio):
         print("    simulador muestra:", pg.locator("#sim-titulo").locator("xpath=../..").inner_text()[:400].replace("\n", " | "))
     revisar(cambio.count() > 0, "el simulador recalcula")
+    texto_ficha = pg.get_by_role("region", name="Ficha del lote").inner_text()
+    revisar("Línea clara" not in texto_ficha and "Línea fuerte" in texto_ficha,
+            "la leyenda del simulador vale en los dos temas (sin 'Línea clara')")
 
     # Decisión.
     ficha = pg.get_by_role("region", name="Ficha del lote")
@@ -213,6 +226,12 @@ def seccion_sergio(nav, url: str) -> None:
     esperado = solo_digitos(f"{round(fila_055['costo_por_100_lotes']):,}")
     mostrado = solo_digitos(pg.locator("#costo-esperado").inner_text())
     revisar(mostrado == esperado, f"'1,500' se lee como 1500 (costo {mostrado} vs {esperado})")
+    tabla_cabe(pg, "1440 px")
+
+    # Una coma que no separa miles es ambigua: se pide corregir, no se adivina.
+    pg.locator("#costo-fp").fill("1,5")
+    revisar(aparece(pg.get_by_text("Escribe los dos costos"), 3000), "'1,5' no se lee como 15: pide corregir el costo")
+    pg.locator("#costo-fp").fill("1,500")
 
     # Sin lotes que mostrar.
     pg.get_by_label("Buscar lote por código").fill("ZZZ")
@@ -250,6 +269,39 @@ def seccion_sergio(nav, url: str) -> None:
     pg.keyboard.press("Escape")
     revisar(pg.get_by_role("dialog").count() == 0, "Esc cierra la ficha")
     revisar(pg.evaluate(JS_DESBORDE), "sin desplazamiento horizontal a 900 px")
+    tabla_cabe(pg, "900 px")
+    ctx.close()
+
+    # Anchos de laptop y de celular: la tabla cabe completa (columna Decisión a la vista).
+    for ancho in (1024, 1100, 1280, 390):
+        ctx = nav.new_context(viewport={"width": ancho, "height": 900})
+        pg = ctx.new_page()
+        pg.set_default_timeout(8000)
+        pg.goto(url + "/?rol=sergio")
+        pg.wait_for_load_state("networkidle")
+        pg.locator("tbody tr[data-codigo]").first.wait_for()
+        tabla_cabe(pg, f"{ancho} px")
+        ctx.close()
+
+    # Un costo guardado con centavos no se redondea al mostrarlo ni al activar otra regla.
+    api(url, "/configuracion", "PUT", {
+        "umbral_activo": 0.5, "costo_falso_premium": 1500.5, "costo_bueno_perdido": 1500, "actualizado_por": "prueba",
+    })
+    ctx = nav.new_context(viewport={"width": 1440, "height": 900})
+    pg = ctx.new_page()
+    pg.set_default_timeout(8000)
+    pg.goto(url + "/?rol=sergio")
+    pg.wait_for_load_state("networkidle")
+    pg.locator("#costo-fp").wait_for()
+    pg.wait_for_timeout(500)
+    valor = pg.locator("#costo-fp").input_value()
+    revisar(valor == "1,500.5", f"un costo de 1500.5 se muestra completo ({valor})")
+    pg.locator("#umbral").focus()
+    pg.keyboard.press("ArrowRight")
+    pg.get_by_role("button", name="Activar umbral 0.55").click()
+    aparece(pg.get_by_text("Regla activada"))
+    guardado = api(url, "/configuracion")["costo_falso_premium"]
+    revisar(abs(guardado - 1500.5) < 1e-9, f"activar otra regla no cambia el costo guardado ({guardado})")
     ctx.close()
     regla_inicial(url)
 
@@ -322,7 +374,12 @@ def seccion_enologa(nav, url: str) -> None:
     pg.wait_for_timeout(2500)
     enviados = [l["codigo"] for l in api(url, "/lotes?orden=fecha")]
     revisar("PRUEBA-SIN-RED" in enviados, "al volver la red la captura se envía")
-    revisar(pg.get_by_text("Esperando conexión para enviarse").count() == 0, "ya no queda como pendiente")
+    try:  # la lista se refresca cuando termina el envío: se espera a que desaparezca
+        pg.get_by_text("Esperando conexión para enviarse").first.wait_for(state="hidden", timeout=10000)
+        sigue_pendiente = False
+    except Exception:
+        sigue_pendiente = True
+    revisar(not sigue_pendiente, "ya no queda como pendiente")
     revisar(pg.evaluate(JS_DESBORDE), "inicio sin desplazamiento horizontal a 390 px (código de 30 caracteres)")
     ctx.close()
 
@@ -335,6 +392,7 @@ def seccion_enologa(nav, url: str) -> None:
     pg.get_by_label("Buscar lote por código").fill("PRUEBA-CODIGO")
     revisar(pg.locator("tbody tr[data-codigo]").count() >= 1, "Sergio ve el lote capturado")
     revisar(pg.evaluate(JS_DESBORDE), "tabla de Sergio sin desplazamiento horizontal a 1024 px")
+    tabla_cabe(pg, "1024 px con código de 30 caracteres")
     ctx.close()
 
 

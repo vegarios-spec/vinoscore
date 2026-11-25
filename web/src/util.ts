@@ -93,15 +93,19 @@ export function fraseProbabilidad(p: number): string {
 }
 
 /**
- * Cantidades en pesos: "$1,500", "1500" o "1,500.50". La coma es separador de miles
- * (uso de México), así que "1,500" vale 1500 y no 1.5. Devuelve null si no es un número.
+ * Cantidades en pesos: "$1,500", "1500" o "1,500.50". La coma solo vale como separador
+ * de miles (uso de México): "1,500" es 1500. Una coma ambigua como "1,5" no se adivina:
+ * devuelve null para que la persona lo corrija.
  */
 export function leerPesos(texto: string): number | null {
-  const t = texto.replace(/[$\s,]/g, "");
-  if (t === "" || !/^\d*\.?\d+$|^\d+\.$/.test(t)) return null;
-  const n = Number(t);
+  const t = texto.replace(/[$\s]/g, "");
+  if (!/^(\d{1,3}(,\d{3})+|\d+)(\.\d+)?$/.test(t)) return null;
+  const n = Number(t.replace(/,/g, ""));
   return Number.isFinite(n) ? n : null;
 }
+
+/** Pesos para un campo editable: separador de miles y centavos solo si los hay ("1,500" o "1,500.5"). */
+export const pesosCampo = (n: number) => n.toLocaleString("es-MX", { maximumFractionDigits: 2 });
 
 /** Análisis de laboratorio: acepta "0,45" y "0.45". Devuelve null si no es un número válido. */
 export function leerNumero(texto: string): number | null {

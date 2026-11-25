@@ -101,7 +101,7 @@ function Simulador({ ficha, variables, umbral }: { ficha: LoteFicha; variables: 
               <strong className="font-medium"> Pasaría de {SEMAFORO[ficha.semaforo].etiqueta} a {SEMAFORO[sim.semaforo].etiqueta}.</strong>
             )}
           </p>
-          <p className="mt-1 text-xs text-suave">Línea clara: umbral de la regla ({pct(umbral)}). Línea gris: valor original del lote.</p>
+          <p className="mt-1 text-xs text-suave">Línea fuerte: umbral de la regla ({pct(umbral)}). Línea gris: valor original del lote.</p>
           {sim.advertencias.length > 0 && (
             <p className="mt-3 border-l-2 border-ambar pl-3 text-xs">{sim.advertencias[0]} Con valores tan raros la estimación es menos confiable.</p>
           )}
