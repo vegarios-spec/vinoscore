@@ -1,0 +1,35 @@
+# --- Secretos ---
+.env
+.env.*
+!.env.example
+
+# --- Python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- Base de datos local ---
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# --- Node / web ---
+node_modules/
+web/dist/
+web/.vite/
+*.tsbuildinfo
+npm-debug.log*
+
+# --- Archivos grandes / temporales ---
+*.log
+*.zip
+*.tmp
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
