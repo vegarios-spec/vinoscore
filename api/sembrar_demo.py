@@ -9,6 +9,7 @@ los lotes de demostración anteriores y los recrea.
 """
 from __future__ import annotations
 
+import argparse
 import random
 from datetime import datetime, timedelta
 
@@ -97,7 +98,21 @@ def sembrar(db=None) -> int:
             db.close()
 
 
-if __name__ == "__main__":
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Crea lotes de demostración de VinoScore.")
+    parser.add_argument("--solo-si-vacio", action="store_true",
+                        help="No hace nada si la base de datos ya tiene lotes (útil al arrancar).")
+    args = parser.parse_args()
+
     crear_tablas()
+    if args.solo_si_vacio:
+        with SessionLocal() as db:
+            if db.query(Lote).count() > 0:
+                print("La base de datos ya tiene lotes: no se siembra la demostración.")
+                return
     n = sembrar()
     print(f"Listo: {n} lotes de demostración (DEMO-01 a DEMO-{n:02d}).")
+
+
+if __name__ == "__main__":
+    main()
