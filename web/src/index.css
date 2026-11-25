@@ -94,7 +94,9 @@ input[type="range"] {
   accent-color: var(--texto);
 }
 
-/* Campos: rectos, fondo de superficie y borde que se marca al enfocar */
+/* Campos: rectos, fondo de superficie y borde que se marca al enfocar.
+   En la capa de componentes, para que las clases de Tailwind puedan ajustar tamaño y texto. */
+@layer components {
 .campo {
   min-height: 3rem;
   width: 100%;
@@ -123,6 +125,7 @@ input[type="range"] {
 }
 .campo-aviso {
   border-color: var(--ambar);
+}
 }
 
 @media (prefers-reduced-motion: reduce) {

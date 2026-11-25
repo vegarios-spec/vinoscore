@@ -4,18 +4,15 @@ import type { ReactNode } from "react";
 const ENFOCABLES = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /**
- * Panel lateral accesible: Esc lo cierra, el foco queda dentro mientras está
- * abierto y vuelve a donde estaba al cerrarlo.
+ * Panel encima de la página para pantallas angostas: Esc lo cierra, el foco queda
+ * dentro mientras está abierto y vuelve a donde estaba al cerrarlo.
  */
 export function Panel({
-  titulo, subtitulo, onCerrar, children, pie, ancho = "sm:max-w-[780px]",
+  etiqueta, onCerrar, children,
 }: {
-  titulo: ReactNode;
-  subtitulo?: ReactNode;
+  etiqueta: string;
   onCerrar: () => void;
   children: ReactNode;
-  pie?: ReactNode;
-  ancho?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -56,32 +53,21 @@ export function Panel({
 
   return (
     <div className="fixed inset-0 z-40">
-      <div className="absolute inset-0 bg-noche/65" onClick={onCerrar} aria-hidden />
+      <div className="absolute inset-0 bg-black/60" onClick={onCerrar} aria-hidden />
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="panel-titulo"
+        aria-label={etiqueta}
         tabIndex={-1}
-        className={`panel-entra absolute right-0 top-0 flex h-full w-full ${ancho} flex-col bg-papel shadow-2xl outline-none`}
+        className="absolute right-0 top-0 flex h-full w-full max-w-[560px] flex-col border-l border-linea-fuerte bg-fondo outline-none"
       >
-        <header className="flex items-start justify-between gap-4 bg-white px-5 py-4 shadow-[0_1px_0_var(--color-borde)]">
-          <div className="min-w-0">
-            <h2 id="panel-titulo" className="font-display text-[1.9rem] font-medium leading-tight text-marino">
-              {titulo}
-            </h2>
-            {subtitulo && <div className="mt-1 text-sm text-suave">{subtitulo}</div>}
-          </div>
-          <button
-            onClick={onCerrar}
-            aria-label="Cerrar"
-            className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-2xl text-marino hover:bg-hielo"
-          >
-            <span aria-hidden>×</span>
+        <div className="flex h-12 shrink-0 items-center justify-end border-b border-linea px-2">
+          <button onClick={onCerrar} className="h-10 px-3 text-sm text-suave hover:bg-realce hover:text-texto">
+            Cerrar
           </button>
-        </header>
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">{children}</div>
-        {pie && <footer className="border-t border-borde bg-white px-5 py-3">{pie}</footer>}
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-5 py-5">{children}</div>
       </div>
     </div>
   );

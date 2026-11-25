@@ -59,7 +59,7 @@ export const SEMAFORO: Record<
     fondo: "bg-verde-claro",
     texto: "text-verde-texto",
     pantalla: "bg-verde text-white",
-    significado: "Buen candidato para el sello Premium. Avísale a Sergio.",
+    significado: "Buen candidato para el sello Premium. Avisar a dirección.",
     verbo: "Listo para sello Premium",
   },
   amarillo: {
@@ -92,7 +92,18 @@ export function fraseProbabilidad(p: number): string {
   return `De cada 100 lotes con análisis parecidos, unos ${Math.round(p * 100)} resultan de calidad alta.`;
 }
 
-/** Acepta "0,45" y "0.45". Devuelve null si no es un número válido. */
+/**
+ * Cantidades en pesos: "$1,500", "1500" o "1,500.50". La coma es separador de miles
+ * (uso de México), así que "1,500" vale 1500 y no 1.5. Devuelve null si no es un número.
+ */
+export function leerPesos(texto: string): number | null {
+  const t = texto.replace(/[$\s,]/g, "");
+  if (t === "" || !/^\d*\.?\d+$|^\d+\.$/.test(t)) return null;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Análisis de laboratorio: acepta "0,45" y "0.45". Devuelve null si no es un número válido. */
 export function leerNumero(texto: string): number | null {
   const t = texto.trim().replace(",", ".");
   if (t === "") return null;
