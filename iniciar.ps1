@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Instala (si hace falta) y arranca VinoScore completo con un solo comando.
 
