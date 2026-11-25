@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import { api, ErrorApi } from "../api";
 import { Cabecera } from "../Cabecera";
 import type { Rol } from "../Cabecera";
 import { descartarPendiente, EVENTO, guardarPendiente, listarPendientes, nuevoId, sincronizar } from "../offline";
 import type { Pendiente } from "../offline";
-import { Sello, SelloMini } from "../Sello";
 import type { CapturaPayload, Razon, Semaforo, Variable } from "../tipos";
-import { Avisos, Boton, Cargando, ErrorCaja, InsigniaDemo, ListaRazones, Vacio } from "../ui";
+import { Avisos, BarraProbabilidad, Boton, Cargando, ErrorCaja, InsigniaDemo, InsigniaSemaforo, ListaRazones, Marcador, Vacio } from "../ui";
 import { SEMAFORO, fechaHora, fechaRelativa, fraseProbabilidad, leerNumero, num, pct } from "../util";
 
 // ------------------------------------------------------------------ conexión
@@ -52,10 +52,10 @@ function BannerConexion({ enLinea, pendientes }: { enLinea: boolean; pendientes:
 
   if (!enLinea) {
     return (
-      <div role="status" className="rounded-xl bg-amarillo-claro p-4 text-amarillo-texto ring-1 ring-amarillo">
-        <p className="font-semibold">Sin conexión</p>
-        <p className="text-sm">
-          Puedes seguir capturando: se guarda en el teléfono y se envía solo cuando vuelva la red.
+      <div role="status" className="border-l-2 border-ambar bg-superficie px-4 py-3 text-sm">
+        <p className="font-medium">Sin conexión</p>
+        <p className="text-suave">
+          Se puede seguir capturando: cada lote se guarda en el teléfono y se envía solo al volver la red.
           {porEnviar.length > 0 && ` Pendientes: ${porEnviar.length}.`}
         </p>
       </div>
@@ -63,13 +63,12 @@ function BannerConexion({ enLinea, pendientes }: { enLinea: boolean; pendientes:
   }
   if (porEnviar.length > 0) {
     return (
-      <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-4 ring-1 ring-turquesa">
+      <div role="status" className="flex flex-wrap items-center justify-between gap-3 border border-linea bg-superficie px-4 py-3 text-sm">
         <p>
-          <strong>{porEnviar.length}</strong> {porEnviar.length === 1 ? "captura espera" : "capturas esperan"} conexión para enviarse.
+          <strong className="font-medium tabular">{porEnviar.length}</strong> {porEnviar.length === 1 ? "captura espera" : "capturas esperan"} conexión para enviarse.
         </p>
         <Boton
           variante="secundario"
-          className="min-h-10"
           disabled={enviando}
           onClick={async () => {
             setEnviando(true);
@@ -124,6 +123,18 @@ interface DatosResultado {
   guardadoAhora: boolean;
 }
 
+/** Enter pasa al siguiente campo; en el último, guarda. Así se captura sin soltar el teclado. */
+function alEnter(e: KeyboardEvent<HTMLInputElement>) {
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+  const form = e.currentTarget.form;
+  if (!form) return;
+  const campos = Array.from(form.querySelectorAll<HTMLInputElement>("input:not([disabled])"));
+  const i = campos.indexOf(e.currentTarget);
+  if (i >= 0 && i < campos.length - 1) campos[i + 1].focus();
+  else form.requestSubmit();
+}
+
 function Captura({
   variables, nombre, onCancelar, onEvaluado, onPendiente,
 }: {
@@ -140,6 +151,9 @@ function Captura({
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const grupos = useMemo(() => agrupar(variables), [variables]);
+  const primerCampo = useRef<HTMLInputElement>(null);
+
+  useEffect(() => primerCampo.current?.focus(), []);
 
   const numeros = useMemo(() => {
     const out: Record<string, number | null> = {};
@@ -186,21 +200,21 @@ function Captura({
 
   const total = variables.length;
   return (
-    <form onSubmit={enviar} noValidate className="mx-auto max-w-xl px-4 pb-44 pt-4">
-      <button type="button" onClick={onCancelar} className="-ml-2 min-h-11 rounded-lg px-3 font-semibold text-turquesa hover:bg-hielo">
-        <span aria-hidden>‹ </span>Cancelar captura
+    <form onSubmit={enviar} noValidate className="mx-auto max-w-xl px-4 pb-44 pt-3">
+      <button type="button" onClick={onCancelar} className="-ml-3 min-h-10 px-3 text-sm text-suave hover:bg-realce hover:text-texto">
+        <span aria-hidden>← </span>Cancelar captura
       </button>
-      <h1 className="mt-2 font-display text-[2.7rem] font-normal leading-[1.05] text-marino">Lote nuevo</h1>
+      <h1 className="mt-3 text-xl font-medium">Lote nuevo</h1>
 
-      <fieldset className="mt-6 space-y-4">
-        <legend className="font-display text-[1.6rem] font-medium text-marino">Identifica el lote</legend>
-        <Campo id="codigo" etiqueta="Código del lote" valor={codigo} onCambio={setCodigo} falta={intento && codigo.trim() === ""} texto placeholder="Ej. L-2026-014" />
+      <fieldset className="mt-6 space-y-5 border-t border-linea pt-4">
+        <legend className="float-left mb-4 w-full text-base font-medium">Identificación</legend>
+        <Campo id="codigo" ref={primerCampo} etiqueta="Código del lote" valor={codigo} onCambio={setCodigo} falta={intento && codigo.trim() === ""} texto placeholder="Ej. L-2026-014" />
         <Campo id="tanque" etiqueta="Tanque (opcional)" valor={tanque} onCambio={setTanque} texto placeholder="Ej. T-03" />
       </fieldset>
 
       {grupos.map((g) => (
-        <fieldset key={g.titulo} className="mt-9 space-y-4">
-          <legend className="font-display text-[1.6rem] font-medium text-marino">{g.titulo}</legend>
+        <fieldset key={g.titulo} className="mt-8 space-y-5 border-t border-linea pt-4">
+          <legend className="float-left mb-4 w-full text-base font-medium">{g.titulo}</legend>
           {g.vars.map((v) => {
             const n = numeros[v.clave];
             return (
@@ -210,14 +224,11 @@ function Captura({
                 etiqueta={v.nombre}
                 unidad={v.unidad}
                 ayuda={v.ayuda}
+                normal={`Normal: ${num(v.rango_normal[0], v.decimales)} – ${num(v.rango_normal[1], v.decimales)}${v.unidad ? ` ${v.unidad}` : ""}`}
                 valor={textos[v.clave] ?? ""}
                 onCambio={(t) => setTextos((x) => ({ ...x, [v.clave]: t }))}
                 falta={intento && n === null}
-                aviso={
-                  n !== null && fueraDeRango(n, v)
-                    ? `Se ve fuera de lo normal (${num(v.rango_normal[0], v.decimales)} a ${num(v.rango_normal[1], v.decimales)}). Revisa que esté bien capturado.`
-                    : undefined
-                }
+                aviso={n !== null && fueraDeRango(n, v) ? "Se ve fuera de lo normal. Revisa que esté bien capturado." : undefined}
               />
             );
           })}
@@ -226,17 +237,17 @@ function Captura({
 
       {error && <div className="mt-6"><ErrorCaja>{error}</ErrorCaja></div>}
 
-      {/* Barra fija: cuánto llevas y el botón de guardar */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-borde bg-white/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+      {/* Barra fija: avance y botón de guardar */}
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-linea bg-fondo px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
         <div className="mx-auto max-w-xl">
-          <div className="mb-2 flex items-center justify-between text-sm font-semibold">
-            <span>{capturados} de {total} análisis</span>
-            {intento && faltan > 0 && <span className="text-rojo-texto">Faltan {faltan}</span>}
+          <div className="mb-2 flex items-center justify-between text-sm">
+            <span className="tabular">{capturados} de {total} análisis</span>
+            {intento && faltan > 0 && <span className="font-medium text-rojo">Faltan {faltan}</span>}
           </div>
-          <div className="mb-3 h-2 overflow-hidden rounded-full bg-hielo" aria-hidden>
-            <div className="h-full rounded-full bg-turquesa transition-[width]" style={{ width: `${(capturados / total) * 100}%` }} />
+          <div className="mb-3 h-1 bg-linea" aria-hidden>
+            <div className="h-full bg-texto transition-[width]" style={{ width: `${(capturados / total) * 100}%` }} />
           </div>
-          <Boton type="submit" grande variante="secundario" className="w-full" disabled={enviando}>
+          <Boton type="submit" grande className="w-full" disabled={enviando}>
             {enviando ? "Guardando…" : "Guardar y evaluar"}
           </Boton>
         </div>
@@ -246,23 +257,27 @@ function Captura({
 }
 
 function Campo({
-  id, etiqueta, valor, onCambio, unidad, ayuda, aviso, falta, texto, placeholder,
+  id, etiqueta, valor, onCambio, unidad, ayuda, normal, aviso, falta, texto, placeholder, ref,
 }: {
   id: string; etiqueta: string; valor: string; onCambio: (t: string) => void;
-  unidad?: string; ayuda?: string; aviso?: string; falta?: boolean; texto?: boolean; placeholder?: string;
+  unidad?: string; ayuda?: string; normal?: string; aviso?: string; falta?: boolean; texto?: boolean; placeholder?: string;
+  ref?: React.Ref<HTMLInputElement>;
 }) {
+  const describe = [ayuda && `${id}-ayuda`, normal && `${id}-normal`, aviso && `${id}-aviso`].filter(Boolean).join(" ");
   return (
-    <div>
-      <label htmlFor={id} className="block text-base font-semibold">
+    <div className="clear-both">
+      <label htmlFor={id} className="block text-sm font-medium">
         {etiqueta}
       </label>
-      {ayuda && <p id={`${id}-ayuda`} className="text-sm text-suave">{ayuda}</p>}
+      {ayuda && <p id={`${id}-ayuda`} className="text-xs text-suave">{ayuda}</p>}
       <div className="relative mt-1.5">
         <input
+          ref={ref}
           id={id}
           name={id}
           value={valor}
           onChange={(e) => onCambio(e.target.value)}
+          onKeyDown={alEnter}
           type="text"
           inputMode={texto ? "text" : "decimal"}
           autoComplete="off"
@@ -270,18 +285,19 @@ function Campo({
           enterKeyHint="next"
           placeholder={placeholder}
           aria-invalid={falta || undefined}
-          aria-describedby={[ayuda ? `${id}-ayuda` : "", aviso ? `${id}-aviso` : ""].join(" ").trim() || undefined}
-          className={`campo tabular ${unidad ? "pr-20" : ""} ${aviso ? "campo-aviso" : ""}`}
+          aria-describedby={describe || undefined}
+          className={`campo !min-h-14 text-lg ${unidad ? "!pr-20" : ""} ${aviso ? "campo-aviso" : ""}`}
         />
         {unidad && (
-          <span aria-hidden className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-suave">
+          <span aria-hidden className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-suave">
             {unidad}
           </span>
         )}
       </div>
-      {falta && <p className="mt-1 text-sm font-semibold text-rojo-texto">Falta este dato.</p>}
+      {normal && <p id={`${id}-normal`} className="mt-1 text-xs text-suave tabular">{normal}</p>}
+      {falta && <p className="mt-1 text-sm font-medium text-rojo">Falta este dato.</p>}
       {aviso && (
-        <p id={`${id}-aviso`} className="mt-1.5 rounded-xl bg-amarillo-claro px-3 py-2 text-sm font-medium text-amarillo-texto">
+        <p id={`${id}-aviso`} className="mt-1.5 border-l-2 border-ambar pl-3 text-sm">
           {aviso}
         </p>
       )}
@@ -291,66 +307,65 @@ function Campo({
 
 // ------------------------------------------------------------------ resultado
 function PantallaResultado({ d, onInicio, onNuevo }: { d: DatosResultado; onInicio: () => void; onNuevo: () => void }) {
-  const s = SEMAFORO[d.semaforo];
-  return (
-    <div>
-      <section className="overflow-hidden bg-noche px-5 pb-12 text-white">
-        {/* El color del semáforo vive en esta franja y en el sello; la palabra va siempre escrita */}
-        <div aria-hidden className={`-mx-5 h-1 ${s.relleno}`} />
-        <div className="mx-auto max-w-xl pt-7">
-          <p className="text-center text-[0.95rem] text-white/70">
-            Lote <strong className="font-semibold text-white">{d.codigo}</strong>
-            {d.tanque && <span>, tanque {d.tanque}</span>}
-          </p>
-          <div className="mt-6 flex justify-center">
-            <Sello tipo={d.semaforo} probabilidad={d.probabilidad} tam={236} />
-          </div>
-          <h1 className="mt-7 text-center font-display text-[3rem] font-normal leading-none">{s.etiqueta}</h1>
-          <p className="mx-auto mt-3 max-w-xs text-center text-[1.05rem] leading-snug text-white/80">{s.significado}</p>
-        </div>
-      </section>
+  const [umbral, setUmbral] = useState<number | null>(null);
+  useEffect(() => {
+    api.configuracion().then((c) => setUmbral(c.umbral_activo)).catch(() => undefined);
+  }, []);
 
-      <section className="bg-papel px-5 pb-12 pt-8">
-        <div className="mx-auto max-w-xl space-y-6">
-          <p className="text-base text-suave">{fraseProbabilidad(d.probabilidad)}</p>
-          {d.extra && <p className="rounded-lg border border-borde bg-white p-4 font-medium text-marino">{d.extra}</p>}
-          <Avisos avisos={d.advertencias} />
-          <ListaRazones razones={d.razones} nota={d.nota} />
-          <div className="space-y-3 pt-2">
-            {d.guardadoAhora && (
-              <Boton grande variante="ambar" className="w-full" onClick={onNuevo}>
-                Capturar otro lote
-              </Boton>
-            )}
-            <Boton grande variante="borde" className="w-full" onClick={onInicio}>
-              Volver a mis lotes
-            </Boton>
-          </div>
+  return (
+    <div className="mx-auto max-w-xl px-4 pb-12 pt-6">
+      <p className="text-sm text-suave [overflow-wrap:anywhere]">
+        Lote <span className="font-medium text-texto">{d.codigo}</span>
+        {d.tanque && <>, tanque {d.tanque}</>}
+      </p>
+
+      <div className="mt-5 border-y border-linea py-6">
+        <div className="flex items-end justify-between gap-4">
+          <p className="text-2xl font-medium leading-none tabular">{pct(d.probabilidad)}</p>
+          <InsigniaSemaforo semaforo={d.semaforo} tam={12} />
         </div>
-      </section>
+        <div className="mt-4">
+          <BarraProbabilidad p={d.probabilidad} semaforo={d.semaforo} umbral={umbral ?? 0.5} alto={8} />
+        </div>
+        <h1 className="mt-4 text-base font-medium">{SEMAFORO[d.semaforo].significado}</h1>
+        <p className="mt-1 text-sm text-suave">{fraseProbabilidad(d.probabilidad)}</p>
+        {umbral !== null && <p className="mt-1 text-xs text-suave">La línea marca la regla activa: Prometedor desde {pct(umbral)}.</p>}
+      </div>
+
+      <div className="mt-6 space-y-6">
+        {d.extra && <p className="border-l-2 border-texto pl-3 text-sm">{d.extra}</p>}
+        <Avisos avisos={d.advertencias} />
+        <ListaRazones razones={d.razones} nota={d.nota} />
+        <div className="space-y-2 pt-2">
+          {d.guardadoAhora && (
+            <Boton grande className="w-full" onClick={onNuevo}>
+              Capturar otro lote
+            </Boton>
+          )}
+          <Boton grande variante="secundario" className="w-full" onClick={onInicio}>
+            Volver a mis lotes
+          </Boton>
+        </div>
+      </div>
     </div>
   );
 }
 
 function PantallaPendiente({ p, onInicio, onNuevo }: { p: Pendiente; onInicio: () => void; onNuevo: () => void }) {
   return (
-    <div>
-      <section className="border-b border-borde bg-white px-5 pb-12 pt-8">
-        <div className="mx-auto max-w-xl text-center">
-          <div className="flex justify-center">
-            <Sello tipo="pendiente" tam={220} />
-          </div>
-          <h1 className="mt-6 font-display text-[2.6rem] font-normal leading-[1.05] text-marino">Guardado en tu teléfono</h1>
-          <p className="mx-auto mt-3 max-w-sm text-lg text-tinta">
-            No hay conexión, así que el lote <strong>{p.payload.codigo}</strong> espera. En cuanto vuelva la red se envía solo y verás su resultado en tus lotes.
-          </p>
-        </div>
-      </section>
-      <div className="mx-auto max-w-xl space-y-3 px-5 py-8">
-        <Boton grande variante="ambar" className="w-full" onClick={onNuevo}>
+    <div className="mx-auto max-w-xl px-4 pb-12 pt-6">
+      <p className="flex items-center gap-2 text-sm text-suave">
+        <Marcador tipo="pendiente" tam={12} /> Sin conexión
+      </p>
+      <h1 className="mt-4 text-xl font-medium">Guardado en tu teléfono</h1>
+      <p className="mt-3 text-base [overflow-wrap:anywhere]">
+        El lote <strong className="font-medium">{p.payload.codigo}</strong> se enviará solo en cuanto vuelva la red. Su resultado aparecerá en la lista de lotes.
+      </p>
+      <div className="mt-8 space-y-2">
+        <Boton grande className="w-full" onClick={onNuevo}>
           Capturar otro lote
         </Boton>
-        <Boton grande variante="borde" className="w-full" onClick={onInicio}>
+        <Boton grande variante="secundario" className="w-full" onClick={onInicio}>
           Volver a mis lotes
         </Boton>
       </div>
@@ -386,32 +401,32 @@ function Inicio({
   const hoy = lotes ? lotes.filter((l) => new Date(l.fecha).toDateString() === new Date().toDateString()).length : 0;
 
   return (
-    <div className="mx-auto max-w-xl px-4 pb-16 pt-7">
-      <h1 className="font-display text-[2.7rem] font-normal leading-[1.05] text-marino">Hola, {nombre || "enóloga"}.</h1>
-      <p className="mt-2 text-lg text-suave">
-        {lotes === null ? " " : hoy > 0 ? `Hoy llevas ${hoy} ${hoy === 1 ? "lote" : "lotes"}.` : "Todavía no capturas lotes hoy."}
+    <div className="mx-auto max-w-xl px-4 pb-16 pt-6">
+      <h1 className="text-xl font-medium [overflow-wrap:anywhere]">Lotes de {nombre || "la enóloga"}</h1>
+      <p className="mt-1 text-sm text-suave">
+        {lotes === null ? " " : hoy > 0 ? `Hoy: ${hoy} ${hoy === 1 ? "lote capturado" : "lotes capturados"}.` : "Todavía no hay capturas hoy."}
       </p>
 
       <div className="mt-5 space-y-3">
         <BannerConexion enLinea={enLinea} pendientes={pendientes} />
-        <Boton grande variante="primario" className="w-full !min-h-[4rem] !text-xl" onClick={onCapturar}>
-          <span aria-hidden className="text-2xl font-light leading-none text-ambar">+</span> Capturar lote nuevo
+        <Boton grande className="w-full" onClick={onCapturar}>
+          Capturar lote nuevo
         </Boton>
       </div>
 
-      <h2 className="mt-10 font-display text-[1.9rem] font-medium leading-none text-marino">Tus lotes recientes</h2>
+      <h2 className="mt-10 text-base font-medium">Recientes</h2>
 
       {pendientes.length > 0 && (
-        <ul className="mt-3 divide-y divide-borde border-y border-borde">
+        <ul className="mt-2 divide-y divide-linea border-t border-linea">
           {pendientes.map((p) => (
             <li key={p.id_cliente} className="flex items-center gap-3 py-3">
-              <SelloMini tipo="pendiente" tam={44} />
+              <Marcador tipo="pendiente" />
               <div className="min-w-0 flex-1">
-                <p className="font-semibold">{p.payload.codigo}</p>
-                <p className="text-sm text-suave">{p.error ? `No se pudo enviar: ${p.error}` : "Esperando conexión para enviarse"}</p>
+                <p className="truncate font-medium">{p.payload.codigo}</p>
+                <p className="text-xs text-suave">{p.error ? `No se pudo enviar: ${p.error}` : "Esperando conexión para enviarse"}</p>
               </div>
               {p.error && (
-                <Boton variante="claro" className="min-h-10" onClick={() => descartarPendiente(p.id_cliente)}>
+                <Boton variante="fantasma" onClick={() => descartarPendiente(p.id_cliente)}>
                   Descartar
                 </Boton>
               )}
@@ -420,32 +435,31 @@ function Inicio({
         </ul>
       )}
 
-      {error && <div className="mt-3"><ErrorCaja>No se pudieron cargar tus lotes. Revisa la conexión.</ErrorCaja></div>}
+      {error && <div className="mt-3"><ErrorCaja>No se pudieron cargar los lotes. Revisa la conexión.</ErrorCaja></div>}
       {!lotes && !error && <Cargando />}
       {lotes && lotes.length === 0 && pendientes.length === 0 && (
         <div className="mt-3">
-          <Vacio titulo="Aquí van a aparecer tus lotes">Captura el primero con el botón de arriba y verás su resultado al instante.</Vacio>
+          <Vacio titulo="Aquí aparecerán los lotes capturados">Captura el primero con el botón de arriba; el resultado sale al instante.</Vacio>
         </div>
       )}
       {lotes && lotes.length > 0 && (
-        <ul className="mt-3 divide-y divide-borde border-y border-borde">
+        <ul className={`divide-y divide-linea border-y border-linea ${pendientes.length ? "" : "mt-2"}`}>
           {lotes.slice(0, 15).map((l) => (
             <li key={l.id}>
-              <button onClick={() => onAbrir(l.id)} className="flex min-h-[4.5rem] w-full items-center gap-3 py-3 text-left hover:bg-white/70">
-                {l.semaforo && <SelloMini tipo={l.semaforo} tam={40} />}
+              <button onClick={() => onAbrir(l.id)} className="flex min-h-16 w-full items-center gap-3 py-3 text-left hover:bg-realce">
+                {l.semaforo && <Marcador tipo={l.semaforo} />}
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2 font-semibold">
+                  <span className="flex items-center gap-2 font-medium">
                     <span className="truncate">{l.codigo}</span>
                     {l.es_demo && <InsigniaDemo />}
                   </span>
-                  <span className="block text-sm text-suave">
-                    {l.tanque ? `Tanque ${l.tanque}, ` : ""}
-                    {fechaRelativa(l.fecha)}
+                  <span className="block truncate text-xs text-suave">
+                    {[l.tanque && `Tanque ${l.tanque}`, fechaRelativa(l.fecha)].filter(Boolean).join(", ")}
                   </span>
                 </span>
-                <span className="text-right">
-                  {l.probabilidad !== null && <span className="block font-display text-[1.9rem] font-normal leading-none tabular">{pct(l.probabilidad)}</span>}
-                  {l.semaforo && <span className={`block text-sm font-semibold ${SEMAFORO[l.semaforo].texto}`}>{SEMAFORO[l.semaforo].etiqueta}</span>}
+                <span className="shrink-0 text-right">
+                  {l.probabilidad !== null && <span className="block font-medium tabular">{pct(l.probabilidad)}</span>}
+                  {l.semaforo && <span className="block text-xs text-suave">{SEMAFORO[l.semaforo].etiqueta}</span>}
                 </span>
               </button>
             </li>
@@ -488,7 +502,7 @@ export function VistaEnologa({
         datos: {
           codigo: f.codigo, tanque: f.tanque, probabilidad: f.probabilidad, semaforo: f.semaforo,
           razones: f.razones, advertencias: f.advertencias, nota: f.nota, guardadoAhora: false,
-          extra: f.decision_actual ? `Sergio lo marcó como ${f.decision_actual} (${fechaHora(f.decisiones[0].fecha)}).` : undefined,
+          extra: f.decision_actual ? `Dirección lo marcó como ${f.decision_actual} (${fechaHora(f.decisiones[0].fecha)}).` : undefined,
         },
       });
     } catch {

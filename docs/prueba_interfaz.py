@@ -254,7 +254,91 @@ def seccion_sergio(nav, url: str) -> None:
     regla_inicial(url)
 
 
-SECCIONES = {"tema": seccion_tema, "sergio": seccion_sergio}
+# ------------------------------------------------------------------- enóloga
+ORDEN_CAMPOS = [
+    "density", "alcohol", "pH", "fixed_acidity", "volatile_acidity", "citric_acid",
+    "residual_sugar", "chlorides", "sulphates", "free_sulfur_dioxide", "total_sulfur_dioxide",
+]
+CODIGO_LARGO = "PRUEBA-CODIGO-MUY-LARGO-123456"  # 30 caracteres
+
+
+def llenar_analisis(pg: Page, valores: dict, enter_al_final: bool = False) -> None:
+    for i, clave in enumerate(ORDEN_CAMPOS):
+        pg.locator(f"#{clave}").fill(str(valores[clave]))
+    if enter_al_final:
+        pg.locator(f"#{ORDEN_CAMPOS[-1]}").press("Enter")
+
+
+def seccion_enologa(nav, url: str) -> None:
+    print("enologa")
+    regla_inicial(url)
+    lote = api(url, "/lotes")[0]
+    valores = api(url, f"/lotes/{lote['id']}")["valores"]
+
+    ctx = nav.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    pg = ctx.new_page()
+    pg.set_default_timeout(8000)
+    pg.goto(url + "/?rol=enologa")
+    pg.wait_for_load_state("networkidle")
+    esquinas(pg, "Enóloga, inicio")
+
+    pg.get_by_role("button", name="Capturar lote nuevo").click()
+    revisar(pg.evaluate("document.activeElement && document.activeElement.id") == "codigo", "el foco empieza en el código del lote")
+    normales = pg.get_by_text(re.compile(r"^Normal: "))
+    revisar(normales.count() == len(ORDEN_CAMPOS), f"cada análisis muestra su rango normal ({normales.count()} de {len(ORDEN_CAMPOS)})")
+
+    pg.locator("#codigo").fill(CODIGO_LARGO)
+    pg.locator("#codigo").press("Enter")
+    revisar(pg.evaluate("document.activeElement.id") == "tanque", "Enter en el código pasa al tanque")
+    pg.locator("#density").fill(str(valores["density"]))
+    pg.locator("#density").press("Enter")
+    revisar(pg.evaluate("document.activeElement.id") == "alcohol", "Enter en densidad pasa a alcohol")
+    revisar(pg.get_by_role("heading", name="Lote nuevo").count() == 1, "Enter a medio formulario no lo envía")
+
+    pg.locator("#chlorides").fill("0.25")
+    revisar(aparece(pg.get_by_text("Se ve fuera de lo normal")), "avisa si un valor sale de lo normal")
+
+    llenar_analisis(pg, {**valores, "chlorides": 0.25}, enter_al_final=True)
+    revisar(aparece(pg.get_by_text(re.compile(r"^\d+ %$")), 8000), "Enter en el último campo guarda y muestra la probabilidad")
+    revisar(pg.get_by_text(re.compile("^(Prometedor|Revisar en cata|Estándar)$")).count() > 0, "el resultado dice el semáforo con palabra")
+    revisar(pg.get_by_text("Factores principales").count() > 0, "el resultado muestra los factores principales")
+    esquinas(pg, "Enóloga, resultado")
+    revisar(pg.evaluate(JS_DESBORDE), "resultado sin desplazamiento horizontal a 390 px")
+
+    # Sin conexión: se guarda en el teléfono y se envía al volver la red.
+    pg.get_by_role("button", name="Capturar otro lote").click()
+    pg.locator("#codigo").fill("PRUEBA-SIN-RED")
+    llenar_analisis(pg, valores)
+    ctx.set_offline(True)
+    pg.get_by_role("button", name="Guardar y evaluar").click()
+    revisar(aparece(pg.get_by_text("Guardado en tu teléfono")), "sin red la captura queda en el teléfono")
+    pg.get_by_role("button", name="Volver a mis lotes").click()
+    revisar(aparece(pg.get_by_text("PRUEBA-SIN-RED")), "el inicio lista la captura pendiente")
+    ctx.set_offline(False)
+    pg.wait_for_timeout(1500)
+    boton = pg.get_by_role("button", name="Enviar ahora")
+    if boton.count():
+        boton.click()
+    pg.wait_for_timeout(2500)
+    enviados = [l["codigo"] for l in api(url, "/lotes?orden=fecha")]
+    revisar("PRUEBA-SIN-RED" in enviados, "al volver la red la captura se envía")
+    revisar(pg.get_by_text("Esperando conexión para enviarse").count() == 0, "ya no queda como pendiente")
+    revisar(pg.evaluate(JS_DESBORDE), "inicio sin desplazamiento horizontal a 390 px (código de 30 caracteres)")
+    ctx.close()
+
+    # El código largo tampoco desborda la tabla de Sergio a 1024 px.
+    ctx = nav.new_context(viewport={"width": 1024, "height": 800})
+    pg = ctx.new_page()
+    pg.set_default_timeout(8000)
+    pg.goto(url + "/?rol=sergio")
+    pg.wait_for_load_state("networkidle")
+    pg.get_by_label("Buscar lote por código").fill("PRUEBA-CODIGO")
+    revisar(pg.locator("tbody tr[data-codigo]").count() >= 1, "Sergio ve el lote capturado")
+    revisar(pg.evaluate(JS_DESBORDE), "tabla de Sergio sin desplazamiento horizontal a 1024 px")
+    ctx.close()
+
+
+SECCIONES = {"tema": seccion_tema, "sergio": seccion_sergio, "enologa": seccion_enologa}
 
 
 def main() -> int:

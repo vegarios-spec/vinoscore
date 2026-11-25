@@ -3,26 +3,21 @@ import type { Razon, Semaforo } from "./tipos";
 import { SEMAFORO } from "./util";
 
 type Variante = "primario" | "secundario" | "fantasma";
-/** Nombres del diseño anterior; se quitan cuando las vistas terminen de migrar. */
-type VarianteVieja = "ambar" | "borde" | "claro";
 
 const VARIANTES: Record<Variante, string> = {
   primario: "bg-primario text-sobre-primario hover:opacity-90",
   secundario: "border border-linea-fuerte bg-transparent text-texto hover:bg-realce",
   fantasma: "bg-transparent text-texto hover:bg-realce",
 };
-const EQUIVALE: Record<VarianteVieja, Variante> = { ambar: "secundario", borde: "secundario", claro: "fantasma" };
-
 export function Boton({
   variante = "primario", grande = false, className = "", ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: Variante | VarianteVieja; grande?: boolean }) {
-  const v = variante in EQUIVALE ? EQUIVALE[variante as VarianteVieja] : (variante as Variante);
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variante?: Variante; grande?: boolean }) {
   return (
     <button
       {...props}
       className={`inline-flex items-center justify-center gap-2 px-4 font-medium transition-colors
         disabled:cursor-not-allowed disabled:opacity-40
-        ${grande ? "min-h-14 text-base" : "min-h-10 text-sm"} ${VARIANTES[v]} ${className}`}
+        ${grande ? "min-h-14 text-base" : "min-h-10 text-sm"} ${VARIANTES[variante]} ${className}`}
     />
   );
 }
