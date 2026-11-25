@@ -45,17 +45,17 @@ sequenceDiagram
   participant S as Servicio del modelo (API)
   participant B as Base de datos
 
-  G->>W: Abre el tablero
-  W->>S: GET /lotes y GET /configuracion
+  G->>W: Abre su pantalla
+  W->>S: GET /lotes, GET /configuracion y GET /perilla
   S->>B: Lee lotes, predicciones, decisiones y la regla activa
-  S-->>W: Lotes ordenados por probabilidad
-  W-->>G: Resumen de la semana, contadores por color y libro de lotes
+  S-->>W: Lotes ordenados por probabilidad y costo de cada umbral
+  W-->>G: Regla de decisión arriba, tabla de lotes y ficha del lote más prometedor
 
-  G->>W: Toca un lote (se abre su ficha en un panel)
+  G->>W: Elige un lote en la tabla (su ficha aparece a la derecha)
   W->>S: GET /lotes/{id}
-  S-->>W: Análisis, semáforo y 3 razones
+  S-->>W: Análisis, semáforo y 3 factores principales
 
-  opt ¿Qué pasa si...?
+  opt Simulador
     G->>W: Mueve alcohol, densidad o cloruros
     W->>S: POST /simular (no guarda nada)
     S-->>W: Nueva probabilidad
@@ -67,8 +67,8 @@ sequenceDiagram
   S-->>W: Confirmación
   W-->>G: La decisión queda en el historial del lote
 
-  opt Perilla del dinero (se abre desde la regla activa de la barra superior)
-    G->>W: Escribe cuánto cuesta un falso Premium y un bueno perdido y gira la perilla
+  opt Regla de decisión (siempre a la vista, arriba)
+    G->>W: Escribe cuánto cuesta un falso Premium y un bueno perdido y mueve el umbral
     W->>S: GET /perilla (costo esperado por umbral)
     S-->>W: Umbral recomendado y "de cada 100 marcados Premium, X sí lo son"
     G->>W: "Activar el umbral"
@@ -86,4 +86,4 @@ sequenceDiagram
 | Amarillo | **Revisar en cata** | Entre 30 % y el umbral activo | Probarlo en cata antes de decidir |
 | Rojo | **Estándar** | Menos de 30 % | Se ve como un vino estándar |
 
-El umbral activo empieza en 0.5 y Sergio lo cambia con la perilla del dinero.
+El umbral activo empieza en 0.5 y Sergio lo cambia en la regla de decisión.

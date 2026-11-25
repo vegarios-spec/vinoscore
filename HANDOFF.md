@@ -14,7 +14,7 @@ A prototype for a Tec de Monterrey project. The partner is **Sergio García**, a
 
 Two users, one shared database:
 - **La enóloga** captures lab analyses on a phone (PWA, offline queue) and instantly sees a result.
-- **Sergio** decides on desktop which batches get premium treatment and tunes the decision rule with the **"perilla del dinero"** (cost-based threshold).
+- **Sergio** decides on desktop which batches get premium treatment and tunes the **decision rule** (cost-based threshold; called "perilla del dinero" in earlier versions).
 
 Team credits (already in README): Elias Vega Rios (data model), Francisco Romero de la Parra (architecture and management), Diego García Serrano (UX/UI and communication).
 
@@ -24,13 +24,13 @@ Team credits (already in README): Elias Vega Rios (data model), Francisco Romero
 |---|---|
 | Model (`modelo/`) | Done, committed. 7.6 MB `.joblib` is in the repo. |
 | API (`api/`, FastAPI + SQLite) | Done, committed, **50 pytest tests pass**. |
-| Web (`web/`, React + Vite + TS + Tailwind v4 + PWA) | **Redesigned twice this session; the redesign is NOT committed.** |
-| Docs (`docs/`) | Architecture diagram (PNG/SVG), user flow, `ruta_a_produccion.md`, README with screenshots. Updated for the redesign but **uncommitted**. |
+| Web (`web/`, React + Vite + TS + Tailwind v4 + PWA) | **Third design ("tool" look, dark by default) done on branch `worktree-rediseno-oscuro`, committed locally, NOT pushed.** |
+| Docs (`docs/`) | Architecture diagram (PNG/SVG), user flow, `ruta_a_produccion.md`, README with new screenshots, `prueba_interfaz.py`, design spec and plan in `docs/superpowers/`. |
 | GitHub | Pushed at commit `98d1fde` (the **first** UI version, before any redesign). |
 
-**Uncommitted work (33 changed files):** the whole redesign (new views, `Sello`, `Dial`, `Panel`, `Cabecera`, new screenshots, README/docs edits, one small API change). Run `git status` to see it. **Nothing was committed or pushed for the redesign because the owner did not ask.** Ask before committing/pushing; suggested split: `web: rediseño (una pantalla por persona, sello, perilla)`, `api: filtro de capturas por prefijo`, `docs: capturas y texto nuevos`.
+**Update 2026-11-25 (third design).** The owner said the second design "looks made by an AI" and asked for something classy, minimal, professional, a *tool*, dark mode by default, **never rounded corners**, and nothing hidden. That work lives on branch `worktree-rediseno-oscuro` (worktree `.claude/worktrees/rediseno-oscuro`). Its first commit is a copy of the second design, which was never committed in the main checkout, followed by the new design. The main checkout (`main`) still has the second design as uncommitted files. **Nothing is pushed; ask before pushing** (the repo is public). An editable architecture whiteboard exists at https://claude.ai/artifact/MYiLjvCHMbxYKbG3Ck6kDE (private until the owner shares it).
 
-**The app is currently running** on http://localhost:8000 (started with `iniciar.ps1`, fresh DB with 30 demo lots). If the session is new, it may be stopped: run `.\iniciar.ps1`.
+**The app runs** with `.\iniciar.ps1` on http://localhost:8000 from whichever folder you start it in. Each folder has its own `vinoscore.db`.
 
 ## 3. How to run and test
 
@@ -67,19 +67,18 @@ cd web; npm run build                            # tsc --noEmit is run separatel
 6. **Demo data:** 30 lots `DEMO-01…30`, real wines from the model's *test* split, stratified by probability so all three colors appear. Flagged `es_demo` and shown with a DEMO badge. The UI says they are not winery data.
 7. **Dataset provenance is unconfirmed.** It looks like the UCI *Wine Quality* (Vinho Verde) data cleaned by the team; README says "confirm before citing".
 
-## 6. Design system (current "classy" direction)
+## 6. Design system (third direction: a professional tool, dark by default)
 
-The owner first asked for something "more original/creative and less confusing", then for something "more classy". Current state is the refined version.
+Full spec: `docs/superpowers/specs/2026-11-25-rediseno-oscuro-design.md`. History: the 1st design was plain; the 2nd ("classy": navy, serif, seal, rotary knob) was rejected as "looks made by an AI". Owner rules now: **no rounded corners ever** (also enforced globally in `index.css`), simple palette, dark mode as default with a light option, nothing hidden, easy data entry and reading, professional tone.
 
-- **Structure:** one screen per person, **no tabs**.
-  - Enóloga: home (big "Capturar lote nuevo" button + her recent lots) → capture (grouped fields, fixed progress bar) → full-screen result.
-  - Sergio: single dashboard. Header sentence + color counters that double as filters → "Libro de lotes" grouped by semáforo → **side panel** for a lot (result, reasons, simulator "¿Qué pasa si…?", decision footer) → **side panel** "La perilla del dinero" opened from the "Regla: Prometedor desde X %" button in the top bar. Role switch lives in the profile menu (corner).
-- **Palette** (tokens in `web/src/index.css`): Noche `#11283D`, Marino `#1B3A57`, Turquesa `#0F7C7A` (actions/confirmations), Papel `#F4F6F8`, Hielo `#E8EDF2`, muted brass **Latón `#B98A3E`** for hairlines/details (brand amber `#E09F3E` kept but rarely used). Semáforo: `#4E8B3A`, `#E0A11B`, `#C0392B` plus dark "tinta" variants for text (AA contrast).
-- **Type:** **Newsreader** (display serif, light/regular/medium) for headlines and big numbers; **Inter** for forms/tables/body. `.font-display` also forces lining figures.
-- **Shape:** 8 px buttons, 12 px panels, 1 px hairlines, no drop shadows. Motion is limited to the seal settling in once and the side panel sliding in; both respect `prefers-reduced-motion`.
-- **Signature element: the seal ("sello")** (`web/src/Sello.tsx`): engraved, serrated-edge stamp with the word around the rim and "N de cada 100" in the center. `SelloMini` is the small list version.
-- **The knob** (`web/src/Dial.tsx`): a real rotary control (drag with mouse/touch, arrow keys, Home/End/PageUp/PageDown, `role="slider"`), 0.05–0.95 in steps of 0.05, brass indicator, amber-brass diamond marking the cheapest rule.
-- Style traps to avoid (from the design guidance): warm cream page + serif + terracotta; all-caps tracked eyebrow labels; "·"-joined meta strings; single accented word in a headline; numbered markers where there is no real sequence.
+- **Structure:** one screen per person, no tabs.
+  - Enóloga: home → capture (each field shows `Normal: a – b unit`; Enter goes to the next field, Enter on the last saves) → result ("NN %", semáforo word, bar with active threshold, factors) / pending (offline).
+  - Sergio: **Regla de decisión** band on top (costs, threshold slider 0.05–0.95 + quick modes + "Más barato", implications, cost-per-threshold chart, Activate) → counters that filter + search/period/tank/CSV → **table** grouped by semáforo (left) + **lot card** always visible (right, sticky; opens the most promising lot). Below 1024 px the card opens as an overlay (Esc closes).
+- **Theme:** `data-tema` on `<html>` ("oscuro" default, "claro"), saved in `localStorage` `vinoscore.tema`; an inline script in `index.html` applies it before paint. Toggle in the top bar.
+- **Palette** (dark / light): background `#141516`/`#F7F7F5`, surface `#1C1D1F`/`#FFFFFF`, line `#2E3033`/`#DADAD7`, text `#ECECEA`/`#17181A`, muted `#9C9EA1`/`#5E6064`; semáforo green `#6CBF78`/`#2F7A3B`, amber `#E3B341`/`#8A6100`, red `#E8685A`/`#B3372B`. No brand accent: primary buttons are text-colored. Color only encodes data.
+- **Type:** IBM Plex Sans only (400/500/600, bundled via `@fontsource/ibm-plex-sans`), scale 12/14/16/20/28/44, tabular figures for numbers.
+- **Shape:** square everything, 1 px lines, no shadows or gradients; semáforo markers are small squares, always next to the word.
+- **Copy:** "Regla de decisión" (was "La perilla del dinero"), "Lotes" (was "Libro de lotes"), "Simulador" (was "¿Qué pasa si…?"), "Factores principales" (was "Lo que más pesó"), "Avisar a dirección" (was "Avísale a Sergio").
 
 ## 7. File map
 
@@ -92,22 +91,23 @@ api/sembrar_demo.py           demo lots (--solo-si-vacio seeds only if DB empty)
 api/tests/                    50 pytest tests (temp DB, never the real one)
 web/src/App.tsx               role routing (first visit: wide screen → Sergio, phone → enóloga)
 web/src/Cabecera.tsx          top bar + profile menu (role switch, enóloga name)
-web/src/Sello.tsx, Dial.tsx, Panel.tsx, ui.tsx, util.ts, offline.ts, api.ts, tipos.ts
+web/src/tema.ts, almacen.ts  theme (dark default) and safe localStorage helpers
+web/src/Panel.tsx, ui.tsx, util.ts, offline.ts, api.ts, tipos.ts
 web/src/vistas/Enologa.tsx    home, capture, result, pending (offline) screens
-web/src/vistas/Sergio.tsx     dashboard and ledger
-web/src/vistas/FichaLote.tsx  lot panel + simulator + decisions
-web/src/vistas/PerillaPanel.tsx  knob panel + cost chart
-docs/                         arquitectura.*, flujo_usuarios.md, ruta_a_produccion.md, capturas/, tomar_capturas.py
+web/src/vistas/Sergio.tsx     workspace: rule band + table + lot card
+web/src/vistas/Regla.tsx      decision rule band (costs, slider, modes, chart, activate)
+web/src/vistas/FichaLote.tsx  lot card: result, decision, factors, simulator, analyses, history
+docs/                         arquitectura.*, flujo_usuarios.md, ruta_a_produccion.md, capturas/, tomar_capturas.py, prueba_interfaz.py
 ```
 
 Notes: the web no longer calls `GET /resumen` (title and counters come from the same `/lotes` list, default period "Últimos 7 días"); the endpoint still exists. `GET /lotes?capturado_por=` matches by **prefix**, so "Enóloga" also finds "Enóloga (demo)".
 
 ## 8. Next steps (suggested order)
 
-1. **Ask the owner whether to commit and push the redesign** (see section 2). Do not push without asking; the repo is public.
-2. **Bring the end-to-end UI test into the repo.** It covered: counter filters, search, panel open/close with Esc, simulator, decision saved, knob by keyboard and drag, "cheapest" and quick modes, profile-menu role switch, mobile capture, focus on first empty field, offline queue and auto-sync, no horizontal overflow at 390 px. Recreate it as `docs/prueba_interfaz.py` (Playwright, Python) and mention it in the README. Gotchas it taught: scope locators (`get_by_role("group", name="Filtrar por semáforo")`, `get_by_role("dialog")`) because the seals' accessible names repeat the words; reset the active rule to 0.5 before running.
-3. **Accessibility pass** with a screen reader or axe: seals are `role="img"` with descriptive labels (row buttons therefore start with the semáforo word); the knob is a slider; panel traps focus. Check the brass-on-white hairlines and the muted text contrast.
-4. **Open questions for Sergio / the team** (also listed in `docs/ruta_a_produccion.md`, marked ❓): which lab analyses the winery really measures and in what units/stage; historical lots with tasting scores; what he considers "prometedor"; real costs for the perilla; tank/barrel names and lot naming; who captures, on what device, with what connectivity; reports he needs; users and roles; Figma link, final name/logo, presentation date; dataset source.
+1. **Get the owner's review of the third design**, then ask whether to merge `worktree-rediseno-oscuro` into `main` and push. Do not push without asking; the repo is public.
+2. ~~Bring the end-to-end UI test into the repo~~: done, `docs/prueba_interfaz.py` (sections `tema`, `sergio`, `enologa`). It writes test lots and decisions: run it against a demo DB (port 8001 from the worktree was used), never the winery's.
+3. **Accessibility pass** with a screen reader or axe: the table rows are clickable `<tr>` with a button in the first cell; the threshold is a native range input; the overlay traps focus. Check muted-text contrast in both themes.
+4. **Open questions for Sergio / the team** (also listed in `docs/ruta_a_produccion.md`, marked ❓): which lab analyses the winery really measures and in what units/stage; historical lots with tasting scores; what he considers "prometedor"; real costs for the decision rule; tank/barrel names and lot naming; who captures, on what device, with what connectivity; reports he needs; users and roles; Figma link, final name/logo, presentation date; dataset source.
 5. **Roadmap items** (all in `ruta_a_produccion.md`, none started): Supabase/PostgreSQL + Alembic, real auth with roles, native Expo app, hosting, retraining with winery data + calibration + SHAP, tasting-feedback loop, monthly PDF/Excel reports, Sentry, audit log, LFPDPPP privacy notice.
 6. Known small things: Docker/Make untested; the order of the capture fields is a proposal to confirm with the enóloga (`api/variables.py`, grouping in `web/src/vistas/Enologa.tsx`); the weekly period default means older lots are hidden until the period is widened (consider a hint).
 
