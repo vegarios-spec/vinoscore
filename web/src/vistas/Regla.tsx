@@ -145,7 +145,8 @@ function CampoPesos({
 function Dato({ valor, texto }: { valor: string; texto: string }) {
   return (
     // dt antes que dd (orden correcto para lectores de pantalla); se ve la cifra arriba con flex-col-reverse.
-    <div className="flex min-w-0 flex-col-reverse">
+    // justify-end: en columna invertida, eso alinea las cifras arriba aunque los textos tengan distinto largo.
+    <div className="flex min-w-0 flex-col-reverse justify-end">
       <dt className="mt-1.5 text-xs text-suave">{texto}</dt>
       <dd className="text-xl font-medium leading-none tabular">{valor}</dd>
     </div>

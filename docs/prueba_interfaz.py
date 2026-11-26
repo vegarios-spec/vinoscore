@@ -160,7 +160,7 @@ def seccion_sergio(nav, url: str) -> None:
         ("costo falso Premium", pg.locator("#costo-fp")),
         ("costo bueno perdido", pg.locator("#costo-fn")),
         ("modo Sello Premium", pg.get_by_role("button", name="Sello Premium")),
-        ("gráfica de costo", pg.get_by_role("group", name="Costo esperado por cada 100 lotes, según el umbral")),
+        ("gráfica de costo", pg.get_by_role("radiogroup", name="Costo esperado por cada 100 lotes, según el umbral")),
         ("tabla de lotes", pg.get_by_role("table", name="Lotes")),
         ("ficha del lote", pg.get_by_role("region", name="Ficha del lote")),
     ]:
