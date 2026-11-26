@@ -2,9 +2,8 @@
 
 Last updated 2026-11-26. Read this first, then `README.md`. It lets a fresh Claude Code session (or a person) continue without re-deriving anything.
 
-- **Project folder:** `C:\Users\Elias\vinoscore` (main checkout, branch `main`)
-- **Redesign worktree:** `C:\Users\Elias\vinoscore\.claude\worktrees\rediseno-oscuro` (branch `worktree-rediseno-oscuro`)
-- **GitHub:** https://github.com/vegarios-spec/vinoscore (public). PR #1 (`worktree-rediseno-oscuro` → `main`) was **merged on 2026-11-26** with the owner's approval: `main` now has the 3rd design.
+- **Project folder:** `C:\Users\Elias\vinoscore` (branch `main`; it is the only branch and the only checkout)
+- **GitHub:** https://github.com/vegarios-spec/vinoscore (public). On 2026-11-26, with the owner's approval, PR #1 (3rd design + review fixes) and PR #2 (`iniciar` rebuilds the web when it changed) were merged into `main`, and their branches (`worktree-rediseno-oscuro`, `ajuste-iniciar`) and the redesign worktree were deleted.
 - **Language:** the owner writes in Spanish or English; answer in the language of their message. All user-facing app text, README and docs stay in **Mexican Spanish**, plain words, no jargon.
 
 ---
@@ -19,24 +18,23 @@ Two users, one shared database:
 
 Team credits (already in README): Elias Vega Rios (data model), Francisco Romero de la Parra (architecture and management), Diego García Serrano (UX/UI and communication).
 
-## 2. Current state (read carefully: two folders, two versions)
+## 2. Current state
 
 | Where | What it has |
 |---|---|
-| GitHub `main` | The **3rd design** (PR #1 merged on 2026-11-26), including the fixes from the final review. History: `98d1fde` 1st design → `28d1fd0` 2nd design → `6ecdd46` … 3rd design and fixes. |
-| Local main checkout `C:\Users\Elias\vinoscore` | Branch `main`, updated with `git pull` after the merge (the 34 uncommitted 2nd-design files were discarded with the owner's OK; they live in commit `28d1fd0`). Its `vinoscore.db` is the owner's demo DB; never touched by tests. Its `web/dist` was rebuilt with the 3rd design on 2026-11-26. |
-| Local worktree `.claude\worktrees\rediseno-oscuro` | Branch `worktree-rediseno-oscuro`, same content as `main`. Kept for now (removing it is the owner's call). Has its own `vinoscore.db` (demo + test lots, used by the UI test) and its own `web/node_modules`. |
+| GitHub `main` | The **3rd design**, including the fixes from the final review (PR #1) and the `iniciar` rebuild fix (PR #2). History: `98d1fde` 1st design → `28d1fd0` 2nd design → `6ecdd46` … 3rd design and fixes → `de014f2` PR #2. |
+| Local `C:\Users\Elias\vinoscore` | Branch `main`, same as GitHub (the old uncommitted 2nd-design files were discarded with the owner's OK; they live in commit `28d1fd0`). Its `vinoscore.db` is the owner's demo DB; **never run the UI test against it**. Its `web/dist` has the 3rd design (built 2026-11-26). |
 
 **History of the design:** 1st plain → 2nd "classy" (navy, serif, serrated seal, rotary knob), which the owner rejected on 2026-11-25 as "looks made by an AI" → **3rd "tool" design** (dark by default, monochrome, square corners, everything visible). The owner approved the 3rd design spec, saw it running, asked to push it, and on 2026-11-26 asked to fix the pending issues and make it the version on GitHub (merged).
 
-**Servers:** none are running. Start servers only when the owner agrees (the machine can run low on memory). For the UI test, the worktree server on port 8001 was started and stopped again on 2026-11-26; use `http://127.0.0.1:8001` (on this machine `localhost` from PowerShell may not reach uvicorn).
+**Servers:** none are running. Start servers only when the owner agrees (the machine can run low on memory), and stop them when done. Use `http://127.0.0.1:<port>` from scripts (on this machine `localhost` from PowerShell may not reach uvicorn).
 
 **Also made:** an editable architecture whiteboard (Claude artifact, private until the owner shares it): https://claude.ai/artifact/MYiLjvCHMbxYKbG3Ck6kDE. It shows the prototype and the production target, with square boxes and steps 1–4.
 
 ## 3. How to run and test
 
 ```powershell
-cd C:\Users\Elias\vinoscore              # or the worktree folder
+cd C:\Users\Elias\vinoscore
 .\iniciar.ps1                            # installs, builds web, seeds demo, starts on :8000
 .\.venv\Scripts\python.exe -m pytest api/tests -q   # 50 tests
 cd web; npx tsc --noEmit; npm run build
@@ -46,15 +44,27 @@ cd web; npx tsc --noEmit; npm run build
 - `iniciar.ps1` / `iniciar.sh` rebuild the web on their own when any file in `web/src`, `web/public`, `web/index.html`, `web/package*.json` or `web/vite.config.ts` is newer than `web/dist/index.html`, and run `npm install` when `web/package-lock.json` is newer than `web/node_modules/.package-lock.json` (added 2026-11-26 after a pull left an old build and a missing font package).
 - The API serves `web/dist` **only if it existed when the server started**. After the first build, restart the server once; after that, a rebuild is enough unless API code changed.
 - Reset demo data: stop the server, delete that folder's `vinoscore.db`, run `python -m api.sembrar_demo`, start again.
-- **UI test** (`docs/prueba_interfaz.py`, Playwright): `python docs/prueba_interfaz.py http://localhost:8001 [--solo tema|sergio|enologa]`. It **writes test lots, decisions and rule changes**, so run it only against a demo DB, never the winery's. In this session it ran from the worktree on port 8001: `PYTHONUTF8=1 /c/Users/Elias/vinoscore/.venv/Scripts/python.exe -m uvicorn api.main:app --port 8001` (cwd = worktree). Last full run: all sections "Todo bien".
-- **Screenshots:** `python docs/tomar_capturas.py http://localhost:8001` writes the 6 README screenshots (`enologa-1..3`, `sergio-1-tablero` dark, `sergio-2-ficha` with the simulator, `sergio-3-claro`). It creates lot `DEMO-CAPTURA`, so reset the DB first if test lots are present.
+- **UI test** (`docs/prueba_interfaz.py`, Playwright). It **writes test lots, decisions and rule changes**, so run it against a **separate test DB** (`prueba.db`; `*.db` is git-ignored), never the owner's `vinoscore.db` or the winery's. Ask the owner before starting the server. In PowerShell, from `C:\Users\Elias\vinoscore`:
+
+  ```powershell
+  $env:PYTHONUTF8 = "1"
+  $env:DATABASE_URL = "sqlite:///C:/Users/Elias/vinoscore/prueba.db"
+  .\.venv\Scripts\python.exe -m api.sembrar_demo --solo-si-vacio     # 30 demo lots (only if empty)
+  .\.venv\Scripts\python.exe -m uvicorn api.main:app --port 8001      # in its own (background) shell, same two env vars
+  .\.venv\Scripts\python.exe docs\prueba_interfaz.py http://127.0.0.1:8001   # [--solo tema|sergio|enologa]
+  ```
+
+  Then stop the server, `Remove-Item Env:DATABASE_URL`, and delete `prueba.db` if no longer needed (a fresh copy avoids leftover test lots). Seeding into `prueba.db` was verified on 2026-11-26 (the owner's `vinoscore.db` stayed untouched). Last full run (2026-11-26, from the former worktree): all sections "Todo bien".
+- **Screenshots:** with the same test server, `python docs/tomar_capturas.py http://127.0.0.1:8001` writes the 6 README screenshots (`enologa-1..3`, `sergio-1-tablero` dark, `sergio-2-ficha` with the simulator, `sergio-3-claro`). It creates lot `DEMO-CAPTURA`, so start from a fresh `prueba.db` if test lots are present.
 - **Docker, `Makefile` and `docker-compose.yml` were never tested** (no Docker or `make` on this machine). Say so if asked.
 
 ## 4. Machine and tooling gotchas (Windows 11)
 
 - **Node is not on PATH in Claude's shell.** Git Bash: `export PATH="$PATH:/c/Program Files/nodejs"`. PowerShell: `$env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [Environment]::GetEnvironmentVariable("Path","User")`.
-- **`gh` is at `C:\Program Files\GitHub CLI\gh.exe`**, authenticated as `vegarios-spec`. Call it from **PowerShell** (`& "C:\Program Files\GitHub CLI\gh.exe" …`): in a worktree-isolated session the Bash guard rejects commands whose path contains "GitHub", and anything with `cd …` before git, `git -C <other folder>`, or the word `.gitignore`. Use plain, separate git commands.
-- The main venv (`C:\Users\Elias\vinoscore\.venv`, Python 3.14) is shared: the worktree has no venv of its own. Use `PYTHONUTF8=1` when printing accents.
+- **`gh` is at `C:\Program Files\GitHub CLI\gh.exe`**, authenticated as `vegarios-spec`. Call it from **PowerShell** (`& "C:\Program Files\GitHub CLI\gh.exe" …`). If a future session works in a worktree, its Bash guard rejects commands whose path contains "GitHub", `cd …` before git, `git -C <other folder>`, or the word `.gitignore`; use plain, separate git commands.
+- **Auto mode may block outward actions** even after the owner approved them (it blocked `git push` once and `gh pr merge`). Then the owner runs them with `!` in the prompt. That `!` runs **Bash**, not PowerShell: `! "/c/Program Files/GitHub CLI/gh.exe" pr merge <n> --repo vegarios-spec/vinoscore --merge` (no `&`).
+- In PowerShell 5.1, pass commit messages with `git commit -F <file>`: inline messages with double quotes get split into pathspecs.
+- The venv is `C:\Users\Elias\vinoscore\.venv` (Python 3.14). Use `PYTHONUTF8=1` when printing accents.
 - Playwright + Chromium are installed in that venv.
 - Diagrams are exported with `@mermaid-js/mermaid-cli` (via `npx`, from a temporary folder) using Playwright's Chromium through `-p pp.json` with `{"executablePath": "%LOCALAPPDATA%\\ms-playwright\\chromium-*\\chrome-win64\\chrome.exe"}` and `PUPPETEER_SKIP_DOWNLOAD=1`; details in `docs/arquitectura.md`. Downloading the npm package needs the owner's OK (auto mode blocked it once).
 - `npm audit`: 4 moderate findings in build-only tooling (`workbox-build` → `glob`/`minimatch`). They never ship; left alone on purpose.
@@ -112,7 +122,7 @@ docs/superpowers/               design spec and implementation plan
 
 ## 8. Next steps (suggested order)
 
-1. ~~PR #1~~ merged 2026-11-26. Optional: remove the worktree and the `worktree-rediseno-oscuro` branch (ask the owner first).
+1. ~~PR #1 and PR #2~~ merged 2026-11-26; branches and worktree deleted.
 2. ~~Small fixes from the final review~~ **done 2026-11-26** (commit `cff12bf` and following): per-cause empty lot-card text; `/configuracion` failure shows only its own alert; save error cleared on success; `aria-current` on the selected row's button (`data-elegido` on the `<tr>` for tests); IME-safe Enter and `enterKeyHint="done"` on the last field; the cost chart is one Tab stop (`radiogroup`, arrows/Home/End, square focus box); `dt` before `dd` in the rule figures; unused `oscuro` prop removed; diagram re-exported ("regla y simulador"). The UI test covers the new behavior; last full run "Todo bien".
 3. **Accessibility pass** with a screen reader or axe, in both themes.
 4. **Open questions for Sergio / the team** (also in `docs/ruta_a_produccion.md`, marked ❓): which lab analyses the winery really measures and in what units; historical lots with tasting scores; what he considers "prometedor"; real costs for the decision rule; tank and lot naming; who captures, on what device and connectivity; reports needed; users and roles; final name/logo; presentation date; dataset source.
