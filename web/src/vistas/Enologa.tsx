@@ -339,7 +339,7 @@ function PantallaResultado({ d, onInicio, onNuevo }: { d: DatosResultado; onInic
       <div className="mt-6 space-y-6">
         {d.extra && <p className="border-l-2 border-texto pl-3 text-sm">{d.extra}</p>}
         <Avisos avisos={d.advertencias} />
-        <ListaRazones razones={d.razones} nota={d.nota} />
+        <ListaRazones razones={d.razones} nota={d.nota} nivel={2} />
         <div className="space-y-2 pt-2">
           {d.guardadoAhora && (
             <Boton grande className="w-full" onClick={onNuevo}>

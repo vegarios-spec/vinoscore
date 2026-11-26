@@ -13,7 +13,7 @@
   --superficie: #1c1d1f;
   --realce: #232427; /* fila seleccionada o al pasar el cursor */
   --linea: #2e3033;
-  --linea-fuerte: #4a4d52;
+  --linea-fuerte: #6c6f73; /* bordes de campos y botones: al menos 3 a 1 contra fondo, superficie y realce (WCAG 1.4.11) */
   --texto: #ececea;
   --suave: #9c9ea1;
   --verde: #6cbf78;
@@ -27,7 +27,7 @@
   --superficie: #ffffff;
   --realce: #efefec;
   --linea: #dadad7;
-  --linea-fuerte: #a9aaa6;
+  --linea-fuerte: #878988; /* al menos 3 a 1 contra fondo, superficie y realce (WCAG 1.4.11) */
   --texto: #17181a;
   --suave: #5e6064;
   --verde: #2f7a3b;

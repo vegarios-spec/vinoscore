@@ -119,6 +119,8 @@ export function VistaSergio({
       <Cabecera rol={rol} onRol={onRol} nombre={nombre} onNombre={onNombre} />
 
       <main>
+        {/* Título principal para lectores de pantalla; a la vista ya están "Regla de decisión" y "Lotes". */}
+        <h1 className="sr-only">VinoScore: regla de decisión y lotes</h1>
         <Regla
           onConfigCambia={(c) => {
             setCfg(c);
@@ -222,7 +224,7 @@ export function VistaSergio({
                     {grupos.map(({ s, filas }) => (
                       <tbody key={s}>
                         <tr className="border-b border-linea bg-superficie">
-                          <th scope="colgroup" colSpan={5} className="px-4 py-2 text-left font-normal">
+                          <th scope="rowgroup" colSpan={5} className="px-4 py-2 text-left font-normal">
                             <span className="inline-flex items-center gap-2">
                               <Marcador tipo={s} />
                               <span className="font-medium">{SEMAFORO[s].etiqueta}</span>
