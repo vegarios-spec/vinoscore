@@ -230,7 +230,8 @@ def listar_lotes(
         q = q.where(func.lower(Lote.tanque) == tanque.lower())
     filas = [_resumen_lote(lote, umbral) for lote in db.scalars(q).all()]
     if capturado_por:
-        filas = [f for f in filas if f["capturado_por"].lower() == capturado_por.lower()]
+        # "Enóloga" también encuentra "Enóloga (demo)".
+        filas = [f for f in filas if f["capturado_por"].lower().startswith(capturado_por.lower())]
     if semaforo:
         filas = [f for f in filas if f["semaforo"] == semaforo]
     if orden == "fecha":

@@ -10,8 +10,8 @@ Lo que falta para pasar de este prototipo a una aplicación completa, y lo que e
 |---|---|
 | Modelo Random Forest, semáforo y 3 razones | El modelo no ha visto datos de la bodega |
 | Captura móvil con avisos de rango, historial y modo sin conexión básico | Sin inicio de sesión: el rol se elige con un botón |
-| Tablero, ficha, decisiones, perilla del dinero, simulador y CSV | Base de datos SQLite local, de un solo usuario |
-| Tablas `lotes`, `analisis`, `predicciones`, `decisiones` y `configuracion` | Los costos de la perilla ($500 y $1,500) son de ejemplo |
+| Tablero, ficha, decisiones, regla de decisión, simulador y CSV | Base de datos SQLite local, de un solo usuario |
+| Tablas `lotes`, `analisis`, `predicciones`, `decisiones` y `configuracion` | Los costos de la regla de decisión ($500 y $1,500) son de ejemplo |
 | 50 pruebas automáticas | Todo corre en una computadora; nada está publicado |
 
 ---
@@ -35,7 +35,7 @@ Inicio de sesión real con roles:
 | Rol | Puede |
 |---|---|
 | **Enóloga** | Capturar lotes y ver sus propios lotes y resultados |
-| **Sergio (dueño)** | Ver todo, decidir y cambiar la perilla del dinero |
+| **Sergio (dueño)** | Ver todo, decidir y cambiar la regla de decisión |
 | **Administrador** | Gestionar usuarios y roles |
 
 Opción natural: Supabase Auth (correo y contraseña o enlace mágico) y que la API valide el token (JWT) en cada petición. Hoy `capturado_por` y `quien` son texto libre; pasarían a ser el usuario autenticado.
@@ -67,7 +67,7 @@ El paso más importante para que el resultado sea confiable.
 3. **Versionar el modelo:** la tabla `predicciones` ya guarda `version_modelo`. Falta un registro de versiones (qué datos, qué métricas, quién lo aprobó).
 4. **Comparar contra el actual** antes de cambiarlo (mismos lotes de prueba, mismas métricas).
 5. **Calibración:** revisar que "70 %" signifique que ~70 de cada 100 lotes así salen buenos (curva de calibración y puntaje de Brier; si hace falta, `CalibratedClassifierCV`). Las razones también deberían pasar de aproximadas a **valores SHAP**.
-6. **Revisar la perilla:** hoy usa la proporción de buenos del conjunto de prueba (21 %); con datos de la bodega se recalcula con su proporción real.
+6. **Revisar la regla de decisión:** hoy usa la proporción de buenos del conjunto de prueba (21 %); con datos de la bodega se recalcula con su proporción real.
 
 *Opción futura (solo si hiciera falta):* si algún día se necesitara correr el modelo dentro de la app o con mucho volumen, se puede exportar a ONNX y servir desde un lenguaje más rápido (por ejemplo, Rust). Con unos cuantos lotes a la semana no hace falta.
 
@@ -80,13 +80,13 @@ El paso más importante para que el resultado sea confiable.
 
 ### 7. Reportes para Sergio · M
 
-Un **reporte mensual en PDF y Excel** con el impacto en pesos de las decisiones: lotes evaluados, cuántos se aprobaron como Premium, cuántos resultaron buenos en la cata y el costo de los falsos Premium y de los buenos perdidos (con la perilla real). Hoy ya existe el CSV de lotes y decisiones (`/exportar.csv`); los reportes se construyen sobre él. ❓ El formato exacto lo define Sergio (ver Parte 2).
+Un **reporte mensual en PDF y Excel** con el impacto en pesos de las decisiones: lotes evaluados, cuántos se aprobaron como Premium, cuántos resultaron buenos en la cata y el costo de los falsos Premium y de los buenos perdidos (con los costos reales). Hoy ya existe el CSV de lotes y decisiones (`/exportar.csv`); los reportes se construyen sobre él. ❓ El formato exacto lo define Sergio (ver Parte 2).
 
 ### 8. Calidad y seguridad · M
 
 - **Pruebas de punta a punta** (Playwright) sobre el flujo completo, además de las 50 pruebas actuales de la API.
 - **Monitoreo de errores:** Sentry (opcional, ver Parte 2).
-- **Bitácora de cambios:** quién cambió qué y cuándo (decisiones, perilla, usuarios). Hoy solo se guarda quién decidió.
+- **Bitácora de cambios:** quién cambió qué y cuándo (decisiones, regla, usuarios). Hoy solo se guarda quién decidió.
 - **Datos personales y LFPDPPP:** los datos de las personas (nombre y correo de los usuarios) se rigen por la Ley Federal de Protección de Datos Personales en Posesión de los Particulares. Hace falta un **aviso de privacidad** y guardar solo lo necesario. Revisarlo con alguien que conozca la ley; este documento no es asesoría legal.
 - Límite de peticiones, respaldo verificado (probar restaurarlo) y revisión de dependencias.
 
@@ -114,9 +114,9 @@ Lista de verificación. Cada punto dice **para qué sirve** y **dónde se pone**
   - *Sirve para:* que el formulario sugiera tanques en lugar de texto libre y valide el código del lote.
   - *Se pone en:* una tabla `tanques` en la base de datos y el formato del código en el formulario.
   - ❓ ¿Cuántos tanques y barricas hay y cómo se llaman? ¿Cómo se forma el código de un lote?
-- [ ] **Los dos costos de la perilla,** en pesos por lote o por botella.
+- [ ] **Los dos costos de la regla de decisión,** en pesos por lote o por botella.
   - *Sirve para:* que la recomendación de umbral refleje su dinero real. Hoy usa $500 y $1,500 de ejemplo.
-  - *Se pone en:* pantalla "Perilla del dinero" (se guardan en la tabla `configuracion`). Valores iniciales: `COSTO_FALSO_PREMIUM_INICIAL` y `COSTO_BUENO_PERDIDO_INICIAL` en `.env`.
+  - *Se pone en:* pantalla "Regla de decisión" (se guardan en la tabla `configuracion`). Valores iniciales: `COSTO_FALSO_PREMIUM_INICIAL` y `COSTO_BUENO_PERDIDO_INICIAL` en `.env`.
   - ❓ ¿Cuánto le cuesta un falso Premium? ¿Cuánto pierde por un bueno vendido como estándar? ¿Por lote o por botella (y cuántas botellas tiene un lote)?
 - [ ] **Quién captura, cuándo y con qué dispositivo, y si hay internet en la bodega.**
   - *Sirve para:* decidir qué tan completo debe ser el modo sin conexión y si basta una PWA o hace falta la app nativa.

@@ -1,62 +1,145 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
 
-@theme {
-  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+/*
+ * VinoScore como herramienta: monocromo, esquinas rectas, una sola familia.
+ * El color solo significa datos (semáforo). Oscuro por defecto; claro con data-tema="claro".
+ */
+:root {
+  color-scheme: dark;
+  --fondo: #141516;
+  --superficie: #1c1d1f;
+  --realce: #232427; /* fila seleccionada o al pasar el cursor */
+  --linea: #2e3033;
+  --linea-fuerte: #4a4d52;
+  --texto: #ececea;
+  --suave: #9c9ea1;
+  --verde: #6cbf78;
+  --ambar: #e3b341;
+  --rojo: #e8685a;
+}
 
-  /* Paleta de la presentación */
-  --color-marino: #1b3a57;
-  --color-marino-claro: #2c5478;
-  --color-turquesa: #0f7c7a;
-  --color-turquesa-oscuro: #0a5f5d;
-  --color-ambar: #e09f3e;
-  --color-fondo: #f4f6f8;
-  --color-tinta: #1b2733;
-  --color-suave: #4a5a6a;
-  --color-borde: #d5dde5;
+:root[data-tema="claro"] {
+  color-scheme: light;
+  --fondo: #f7f7f5;
+  --superficie: #ffffff;
+  --realce: #efefec;
+  --linea: #dadad7;
+  --linea-fuerte: #a9aaa6;
+  --texto: #17181a;
+  --suave: #5e6064;
+  --verde: #2f7a3b;
+  --ambar: #8a6100;
+  --rojo: #b3372b;
+}
 
-  /* Semáforo: color de relleno + versión clara + texto oscuro (contraste AA) */
-  --color-verde: #4e8b3a;
-  --color-verde-claro: #e7f1e2;
-  --color-verde-texto: #2a561b;
-  --color-amarillo: #e0a11b;
-  --color-amarillo-claro: #fcf1d4;
-  --color-amarillo-texto: #6a4800;
-  --color-rojo: #c0392b;
-  --color-rojo-claro: #f9e4e1;
-  --color-rojo-texto: #8a2216;
+@theme inline {
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-realce: var(--realce);
+  --color-linea: var(--linea);
+  --color-linea-fuerte: var(--linea-fuerte);
+  --color-texto: var(--texto);
+  --color-suave: var(--suave);
+  --color-verde: var(--verde);
+  --color-ambar: var(--ambar);
+  --color-rojo: var(--rojo);
+  /* Botón principal: el color del texto como fondo */
+  --color-primario: var(--texto);
+  --color-sobre-primario: var(--fondo);
+
+  /* Escala tipográfica: 12 / 14 / 16 / 20 / 28 / 44 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.75rem;
 }
 
 html {
-  background: var(--color-fondo);
-  color: var(--color-tinta);
+  background: var(--fondo);
+  color: var(--texto);
   font-family: var(--font-sans);
   -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
+  background: var(--fondo);
 }
 
-/* Foco visible para teclado */
+/* Ninguna esquina redonda, en ningún lado (regla del dueño). */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+
 :focus-visible {
-  outline: 3px solid var(--color-ambar);
+  outline: 2px solid var(--texto);
   outline-offset: 2px;
 }
 
-/* Números alineados en tablas y gráficas */
+/* Gráfica de la regla: el contorno de foco de un elemento SVG no siempre se dibuja; se marca la columna. */
+[data-indice]:focus {
+  outline: none;
+}
+[data-indice]:focus-visible .foco {
+  stroke: var(--texto);
+  stroke-width: 1.5;
+}
+
 .tabular {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 input[type="range"] {
-  accent-color: var(--color-turquesa);
+  accent-color: var(--texto);
+}
+
+/* Campos: rectos, fondo de superficie y borde que se marca al enfocar.
+   En la capa de componentes, para que las clases de Tailwind puedan ajustar tamaño y texto. */
+@layer components {
+.campo {
+  min-height: 3rem;
+  width: 100%;
+  border: 1px solid var(--linea-fuerte);
+  background: var(--superficie);
+  padding: 0 0.85rem;
+  font-size: 1rem;
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.12s;
+}
+.campo::placeholder {
+  color: var(--suave);
+  opacity: 0.8;
+}
+.campo:hover {
+  border-color: var(--suave);
+}
+.campo:focus {
+  border-color: var(--texto);
+  outline: 1px solid var(--texto);
+  outline-offset: 0;
+}
+.campo[aria-invalid="true"] {
+  border-color: var(--rojo);
+}
+.campo-aviso {
+  border-color: var(--ambar);
+}
 }
 
 @media (prefers-reduced-motion: reduce) {
   * {
-    animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    animation: none !important;
   }
 }

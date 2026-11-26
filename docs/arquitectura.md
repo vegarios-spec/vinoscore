@@ -7,7 +7,7 @@ VinoScore tiene tres piezas que se hablan entre sí:
 | **App de la enóloga** | Captura los 11 análisis de cada lote y muestra el resultado al instante | La enóloga, desde el celular |
 | **Servicio del modelo (API)** | Corre el modelo, calcula el semáforo y las razones, y guarda todo | Las dos apps |
 | **Base de datos** | Guarda lotes, análisis, predicciones, decisiones y la configuración | La API |
-| **Web de Sergio** | Tablero, decisiones, perilla del dinero y simulador | Sergio, desde la computadora |
+| **Web de Sergio** | Regla de decisión, lotes, ficha, decisiones y simulador | Sergio, desde la computadora |
 
 Los **cuatro pasos** del flujo son los mismos en las dos versiones:
 
@@ -61,7 +61,7 @@ flowchart TB
   OA -- "<b>3 probabilidad<br/>y semáforo</b>" --> OE
   OA <-- "lee y guarda<br/>el resultado" --> OD
   OS -- "<b>4 consulta y decide</b>" --> OD
-  OS -. "perilla y simulador" .-> OA
+  OS -. "regla y simulador" .-> OA
   OA -.-> OM
 
   classDef app fill:#ffffff,stroke:#0F7C7A,stroke-width:3px,color:#1B3A57

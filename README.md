@@ -13,22 +13,37 @@ Es el prototipo de un proyecto universitario del Tec de Monterrey para un socio 
 
 ## Cómo se ve
 
+VinoScore es una herramienta de trabajo: **todo está a la vista**, sin pestañas ni funciones escondidas.
+
+- **Modo oscuro por defecto**, con un botón en la barra superior para pasar a claro (se recuerda en ese navegador).
+- **Sobrio:** grises neutros, esquinas rectas y una sola tipografía (IBM Plex Sans, incluida en la app para que funcione sin conexión). Las cifras van alineadas en columna.
+- **El color solo significa datos:** verde, ámbar y rojo marcan el semáforo y siempre van con su palabra (Prometedor, Revisar en cata o Estándar).
+
 ### La enóloga (celular)
+
+Inicio con el botón para capturar y sus lotes recientes. La captura va por grupos (lo básico, acidez, azúcar y sulfatos, azufre). Cada campo muestra su **rango normal** y avisa si el valor se sale; **Enter pasa al siguiente campo** y en el último guarda. El resultado muestra la probabilidad, el semáforo y los factores principales.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/capturas/enologa-1-formulario.png" width="240" alt="Formulario de captura"><br><sub>1. Captura de los 11 análisis</sub></td>
-    <td align="center"><img src="docs/capturas/enologa-2-aviso.png" width="240" alt="Aviso de valor fuera de lo normal"><br><sub>2. Aviso si un valor se ve raro</sub></td>
-    <td align="center"><img src="docs/capturas/enologa-3-resultado.png" width="240" alt="Resultado con semáforo"><br><sub>3. Resultado inmediato</sub></td>
+    <td align="center"><img src="docs/capturas/enologa-1-inicio.png" width="240" alt="Inicio: botón para capturar y lotes recientes"><br><sub><b>Inicio:</b> capturar y ver sus lotes</sub></td>
+    <td align="center"><img src="docs/capturas/enologa-2-captura.png" width="240" alt="Captura con rango normal en cada campo y aviso de valor fuera de lo normal"><br><sub><b>Captura:</b> rango normal y aviso</sub></td>
+    <td align="center"><img src="docs/capturas/enologa-3-resultado.png" width="240" alt="Resultado: probabilidad, semáforo y factores"><br><sub><b>Resultado:</b> probabilidad y por qué</sub></td>
   </tr>
 </table>
 
 ### Sergio (computadora)
 
+Una sola pantalla con tres zonas:
+
+1. **Regla de decisión** (arriba): los dos costos, el umbral con control deslizante y modos rápidos, lo que implica ese umbral, el costo de cada umbral en una gráfica y el botón para activarlo.
+2. **Lotes** (izquierda): tabla agrupada por semáforo. Los contadores de colores **son también los filtros**; además hay búsqueda, periodo, tanque y CSV.
+3. **Ficha del lote** (derecha): resultado, decisión con comentario, factores principales, simulador, análisis e historial. Abre con el lote más prometedor; en pantallas angostas se abre encima y se cierra con Esc.
+
+![Pantalla de Sergio en modo oscuro](docs/capturas/sergio-1-tablero.png)
+
 | | |
 |---|---|
-| ![Tablero](docs/capturas/sergio-1-tablero.png)<br>**Tablero:** lotes ordenados por probabilidad, con filtros y exportación a CSV | ![Ficha del lote](docs/capturas/sergio-2-ficha.png)<br>**Ficha del lote:** análisis, semáforo, razones y decisión |
-| ![Perilla del dinero](docs/capturas/sergio-3-perilla.png)<br>**Perilla del dinero:** el costo esperado de cada regla | ![Simulador](docs/capturas/sergio-4-simulador.png)<br>**¿Qué pasa si…?:** mover alcohol, densidad o cloruros |
+| ![Ficha con el simulador](docs/capturas/sergio-2-ficha.png)<br>**Simulador:** mover alcohol, densidad o cloruros y ver cómo cambiaría la probabilidad | ![Modo claro](docs/capturas/sergio-3-claro.png)<br>**Modo claro:** la misma pantalla |
 
 *Los lotes `DEMO-xx` son datos de demostración: vinos reales del conjunto de pruebas del modelo, no lotes de la bodega.*
 
@@ -55,7 +70,7 @@ El script crea el entorno de Python, instala lo necesario, compila la web, carga
 | Quién | Dirección |
 |---|---|
 | Enóloga | <http://localhost:8000> |
-| Sergio | <http://localhost:8000/?rol=sergio> (o el botón "Sergio" arriba) |
+| Sergio | <http://localhost:8000/?rol=sergio> (o, desde el menú de perfil de la esquina, "Sergio") |
 | Documentación de la API | <http://localhost:8000/docs> |
 
 Opciones: `.\iniciar.ps1 -SinDemo` (sin datos de demostración), `-Puerto 9000`, `-Reconstruir` (volver a compilar la web). En Mac/Linux: `SIN_DEMO=1`, `PUERTO=9000`, `RECONSTRUIR=1`.
@@ -79,7 +94,16 @@ Con el servidor corriendo, abre `http://<IP de tu computadora>:8000` en el celul
 .venv/bin/python -m pytest api/tests -q         # Mac / Linux
 ```
 
-50 pruebas: predicción y semáforo, razones, perilla del dinero, validación de datos y los endpoints. Usan una base de datos temporal, nunca la real.
+50 pruebas: predicción y semáforo, razones, regla de decisión (costo por umbral), validación de datos y los endpoints. Usan una base de datos temporal, nunca la real.
+
+**Prueba de la interfaz** (Playwright, con la API corriendo y la web compilada):
+
+```bash
+python docs/prueba_interfaz.py http://localhost:8000            # todo
+python docs/prueba_interfaz.py http://localhost:8000 --solo tema # tema | sergio | enologa
+```
+
+Revisa el tema oscuro y claro, que no haya esquinas redondas, la regla de decisión, filtros, ficha, simulador, decisiones, la captura con Enter y rangos, el modo sin conexión y que nada desborde a 390 px. **Guarda lotes y decisiones de prueba:** úsala con una base de demostración, nunca con la de la bodega.
 
 ### Reentrenar el modelo
 
@@ -104,13 +128,13 @@ Reproduce el modelo del equipo y vuelve a escribir `modelo/vinoscore_rf.joblib` 
 | 🔴 Rojo | **Estándar** | menos de 0.3 |
 
 4. Se muestran **3 razones** en lenguaje simple, por ejemplo: *"Alcohol alto (12.6 %): favorece la calidad"*.
-5. Sergio ve todos los lotes, decide (**Premium**, **Mandar a cata** o **Estándar**) y puede cambiar el umbral con la perilla del dinero.
+5. Sergio ve todos los lotes, decide (**Premium**, **Mandar a cata** o **Estándar**) y puede cambiar el umbral en la regla de decisión.
 
 > **Sobre las razones:** son una explicación **aproximada**. Se eligen las 3 variables con más peso en las que el lote más se aleja de la mediana de los vinos buenos, y se dice si ese valor favorece o resta. No es un desglose exacto de lo que calculó el modelo.
 
-### La perilla del dinero
+### La regla de decisión (antes "perilla del dinero")
 
-Sergio escribe dos costos, en pesos por lote:
+Sergio escribe dos costos, en pesos por lote (acepta separador de miles: `1,500`):
 
 - ¿Cuánto le cuesta etiquetar Premium un vino que no lo es? (**falso Premium**)
 - ¿Cuánto pierde si un vino bueno se vende como estándar? (**bueno perdido**)
@@ -229,7 +253,7 @@ Lee esto antes de confiar en un resultado:
 - **Encuentra pocos vinos buenos con la regla inicial** (recall de 38 %). Para no perder candidatos conviene el modo *Filtro a cata*, a costa de catar más.
 - **Las probabilidades no están calibradas.** "71 de cada 100" es una estimación del modelo; no se ha comprobado que 71 de cada 100 lotes así resulten buenos en la realidad.
 - **Las razones son aproximadas** (ver arriba).
-- **La perilla usa los vinos de prueba del modelo**, donde 21 de cada 100 son buenos. En la bodega esa proporción puede ser distinta, y entonces el umbral óptimo también.
+- **La regla de decisión usa los vinos de prueba del modelo**, donde 21 de cada 100 son buenos. En la bodega esa proporción puede ser distinta, y entonces el umbral óptimo también.
 - **Es un prototipo:** no hay inicio de sesión (el rol se elige con un botón), la base de datos es un archivo SQLite de un solo usuario, y el modo sin conexión es básico (guarda y reenvía capturas; no guarda las fichas para consultarlas sin red).
 - **"Calidad ≥ 7" es el criterio del equipo**, no necesariamente el de Sergio.
 - El **orden de captura** de los análisis es una propuesta, por confirmar con la enóloga.
