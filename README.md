@@ -73,7 +73,9 @@ El script crea el entorno de Python, instala lo necesario, compila la web, carga
 | Sergio | <http://localhost:8000/?rol=sergio> (o, desde el menú de perfil de la esquina, "Sergio") |
 | Documentación de la API | <http://localhost:8000/docs> |
 
-Opciones: `.\iniciar.ps1 -SinDemo` (sin datos de demostración), `-Puerto 9000`, `-Reconstruir` (volver a compilar la web). En Mac/Linux: `SIN_DEMO=1`, `PUERTO=9000`, `RECONSTRUIR=1`.
+Si el código de la web cambió desde la última vez (por ejemplo, después de un `git pull`), el script la vuelve a compilar solo e instala las dependencias nuevas.
+
+Opciones: `.\iniciar.ps1 -SinDemo` (sin datos de demostración), `-Puerto 9000`, `-Reconstruir` (compilar la web aunque no haya cambios). En Mac/Linux: `SIN_DEMO=1`, `PUERTO=9000`, `RECONSTRUIR=1`.
 
 ### Otras formas
 
