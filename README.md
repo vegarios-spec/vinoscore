@@ -82,7 +82,7 @@ Opciones: `.\iniciar.ps1 -SinDemo` (sin datos de demostración), `-Puerto 9000`,
 | Forma | Comando | Estado |
 |---|---|---|
 | Docker | `docker compose up --build` | ⚠️ Incluido, **sin probar** (la máquina de desarrollo no tenía Docker) |
-| Make | `make iniciar` | ⚠️ Incluido, **sin probar** (la máquina de desarrollo no tenía `make`) |
+| Make | `make iniciar` (también `make pruebas`, `make web`, `make demo`) | Probado en Windows 11 con GNU Make 4.4.1 (en Mac y Linux, sin probar). Ojo: `make limpiar` borra también `vinoscore.db` |
 | Modo desarrollo | `uvicorn api.main:app --reload` y, en otra terminal, `cd web && npm run dev` (<http://localhost:5173>) | Probado |
 
 ### Probarlo desde el celular

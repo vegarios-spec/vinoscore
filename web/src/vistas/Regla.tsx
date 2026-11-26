@@ -94,10 +94,18 @@ function Grafica({
             >
               <title>{etiqueta}</title>
               <rect className="foco" x={M.i + i * slot + 0.5} y={M.s + 0.5} width={slot - 1} height={alto + M.b - 1} fill="transparent" />
-              <rect
-                x={x} y={yy} width={bw} height={Math.max(M.s + alto - yy, 1)}
-                fill={esSel ? "var(--texto)" : esRec ? "var(--suave)" : "var(--linea-fuerte)"}
-              />
+              {esRec && !esSel ? (
+                // Más barato: barra hueca con contorno del color del texto, distinta de las grises sin usar color.
+                <rect
+                  x={x + 0.75} y={yy + 0.75} width={bw - 1.5} height={Math.max(M.s + alto - yy - 1.5, 1)}
+                  fill="var(--superficie)" stroke="var(--texto)" strokeWidth={1.5}
+                />
+              ) : (
+                <rect
+                  x={x} y={yy} width={bw} height={Math.max(M.s + alto - yy, 1)}
+                  fill={esSel ? "var(--texto)" : "var(--linea-fuerte)"}
+                />
+              )}
               {i % 2 === 1 && (
                 <text x={x + bw / 2} y={H - 8} textAnchor="middle" fontSize={10.5} fill={esSel ? "var(--texto)" : "var(--suave)"} fontWeight={esSel ? 600 : 400}>
                   {num(f.umbral, 2)}
@@ -110,7 +118,7 @@ function Grafica({
       </svg>
       <figcaption className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-suave">
         <span className="inline-flex items-center gap-1.5"><span aria-hidden className="inline-block size-2.5 bg-texto" />Umbral elegido</span>
-        <span className="inline-flex items-center gap-1.5"><span aria-hidden className="inline-block size-2.5 bg-suave" />Más barato</span>
+        <span className="inline-flex items-center gap-1.5"><span aria-hidden className="inline-block size-2.5 border border-texto bg-superficie" />Más barato</span>
         <span className="inline-flex items-center gap-1.5"><span aria-hidden className="inline-block h-0.5 w-2.5 bg-texto" />Regla activa</span>
       </figcaption>
     </figure>

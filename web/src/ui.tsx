@@ -71,11 +71,12 @@ export function BarraProbabilidad({
   );
 }
 
-/** Factores que más pesaron en el resultado. */
-export function ListaRazones({ razones, nota }: { razones: Razon[]; nota?: string }) {
+/** Factores que más pesaron en el resultado. `nivel` mantiene el orden de títulos de la pantalla donde se usa. */
+export function ListaRazones({ razones, nota, nivel = 3 }: { razones: Razon[]; nota?: string; nivel?: 2 | 3 }) {
+  const Titulo = nivel === 2 ? "h2" : "h3";
   return (
     <section>
-      <h3 className="text-base font-medium text-texto">Factores principales</h3>
+      <Titulo className="text-base font-medium text-texto">Factores principales</Titulo>
       <ul className="mt-2 divide-y divide-linea border-y border-linea">
         {razones.map((r) => (
           <li key={r.variable} className="flex items-baseline gap-3 py-2.5">
