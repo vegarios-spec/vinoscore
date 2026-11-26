@@ -1,8 +1,14 @@
-# VinoScore - atajos (necesita make; en Windows usa iniciar.ps1)
-# NOTA: este Makefile no se pudo probar en la máquina donde se desarrolló (Windows sin make).
+# VinoScore - atajos (necesita make; en Windows también sirve iniciar.ps1)
+# Probado en Windows 11 con GNU Make 4.4.1 (pruebas, web y la lista de pasos de iniciar).
+# OJO: "make limpiar" borra también vinoscore.db (los lotes guardados).
 
+ifeq ($(OS),Windows_NT)
+PY ?= python
+VENV = .venv/Scripts/python.exe
+else
 PY ?= python3
 VENV = .venv/bin/python
+endif
 
 .PHONY: iniciar instalar modelo demo web correr dev pruebas limpiar
 
