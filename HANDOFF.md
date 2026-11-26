@@ -24,7 +24,7 @@ Team credits (already in README): Elias Vega Rios (data model), Francisco Romero
 | Where | What it has |
 |---|---|
 | GitHub `main` | The **3rd design** (PR #1 merged on 2026-11-26), including the fixes from the final review. History: `98d1fde` 1st design → `28d1fd0` 2nd design → `6ecdd46` … 3rd design and fixes. |
-| Local main checkout `C:\Users\Elias\vinoscore` | Branch `main`, updated with `git pull` after the merge (the 34 uncommitted 2nd-design files were discarded with the owner's OK; they live in commit `28d1fd0`). Its `vinoscore.db` is the owner's demo DB; never touched by tests. Rebuild the web (`.\iniciar.ps1 -Reconstruir`) before showing it, because its `web/dist` may still be the old build. |
+| Local main checkout `C:\Users\Elias\vinoscore` | Branch `main`, updated with `git pull` after the merge (the 34 uncommitted 2nd-design files were discarded with the owner's OK; they live in commit `28d1fd0`). Its `vinoscore.db` is the owner's demo DB; never touched by tests. Its `web/dist` was rebuilt with the 3rd design on 2026-11-26. |
 | Local worktree `.claude\worktrees\rediseno-oscuro` | Branch `worktree-rediseno-oscuro`, same content as `main`. Kept for now (removing it is the owner's call). Has its own `vinoscore.db` (demo + test lots, used by the UI test) and its own `web/node_modules`. |
 
 **History of the design:** 1st plain → 2nd "classy" (navy, serif, serrated seal, rotary knob), which the owner rejected on 2026-11-25 as "looks made by an AI" → **3rd "tool" design** (dark by default, monochrome, square corners, everything visible). The owner approved the 3rd design spec, saw it running, asked to push it, and on 2026-11-26 asked to fix the pending issues and make it the version on GitHub (merged).
@@ -43,6 +43,7 @@ cd web; npx tsc --noEmit; npm run build
 ```
 
 - Sergio view: `/?rol=sergio`; enóloga: `/?rol=enologa`; API docs: `/docs`.
+- `iniciar.ps1` / `iniciar.sh` rebuild the web on their own when any file in `web/src`, `web/public`, `web/index.html`, `web/package*.json` or `web/vite.config.ts` is newer than `web/dist/index.html`, and run `npm install` when `web/package-lock.json` is newer than `web/node_modules/.package-lock.json` (added 2026-11-26 after a pull left an old build and a missing font package).
 - The API serves `web/dist` **only if it existed when the server started**. After the first build, restart the server once; after that, a rebuild is enough unless API code changed.
 - Reset demo data: stop the server, delete that folder's `vinoscore.db`, run `python -m api.sembrar_demo`, start again.
 - **UI test** (`docs/prueba_interfaz.py`, Playwright): `python docs/prueba_interfaz.py http://localhost:8001 [--solo tema|sergio|enologa]`. It **writes test lots, decisions and rule changes**, so run it only against a demo DB, never the winery's. In this session it ran from the worktree on port 8001: `PYTHONUTF8=1 /c/Users/Elias/vinoscore/.venv/Scripts/python.exe -m uvicorn api.main:app --port 8001` (cwd = worktree). Last full run: all sections "Todo bien".
