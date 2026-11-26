@@ -4,7 +4,7 @@ Last updated 2026-11-26. Read this first, then `README.md`. It lets a fresh Clau
 
 - **Project folder:** `C:\Users\Elias\vinoscore` (main checkout, branch `main`)
 - **Redesign worktree:** `C:\Users\Elias\vinoscore\.claude\worktrees\rediseno-oscuro` (branch `worktree-rediseno-oscuro`)
-- **GitHub:** https://github.com/vegarios-spec/vinoscore (public). **Open PR #1:** https://github.com/vegarios-spec/vinoscore/pull/1 (`worktree-rediseno-oscuro` → `main`, not merged)
+- **GitHub:** https://github.com/vegarios-spec/vinoscore (public). PR #1 (`worktree-rediseno-oscuro` → `main`) was **merged on 2026-11-26** with the owner's approval: `main` now has the 3rd design.
 - **Language:** the owner writes in Spanish or English; answer in the language of their message. All user-facing app text, README and docs stay in **Mexican Spanish**, plain words, no jargon.
 
 ---
@@ -23,14 +23,13 @@ Team credits (already in README): Elias Vega Rios (data model), Francisco Romero
 
 | Where | What it has |
 |---|---|
-| GitHub `main` | Commit `98d1fde`: the **first** UI version. |
-| GitHub branch `worktree-rediseno-oscuro` / **PR #1** | 7 commits: `28d1fd0` = the 2nd design (never committed before), then the **3rd design** (`6ecdd46` … `54d9596`). This is the current, owner-approved design. |
-| Local main checkout `C:\Users\Elias\vinoscore` | Branch `main` at `98d1fde` **plus the 2nd design as ~34 uncommitted files** (same content as commit `28d1fd0`). Its `vinoscore.db` is the owner's demo DB; never touched by tests. |
-| Local worktree `.claude\worktrees\rediseno-oscuro` | Same as PR #1, clean. Has its own `vinoscore.db` (demo + test lots) and its own `web/node_modules`. |
+| GitHub `main` | The **3rd design** (PR #1 merged on 2026-11-26), including the fixes from the final review. History: `98d1fde` 1st design → `28d1fd0` 2nd design → `6ecdd46` … 3rd design and fixes. |
+| Local main checkout `C:\Users\Elias\vinoscore` | Branch `main`, updated with `git pull` after the merge (the 34 uncommitted 2nd-design files were discarded with the owner's OK; they live in commit `28d1fd0`). Its `vinoscore.db` is the owner's demo DB; never touched by tests. Rebuild the web (`.\iniciar.ps1 -Reconstruir`) before showing it, because its `web/dist` may still be the old build. |
+| Local worktree `.claude\worktrees\rediseno-oscuro` | Branch `worktree-rediseno-oscuro`, same content as `main`. Kept for now (removing it is the owner's call). Has its own `vinoscore.db` (demo + test lots, used by the UI test) and its own `web/node_modules`. |
 
-**History of the design:** 1st plain → 2nd "classy" (navy, serif, serrated seal, rotary knob), which the owner rejected on 2026-11-25 as "looks made by an AI" → **3rd "tool" design** (dark by default, monochrome, square corners, everything visible). The owner approved the 3rd design spec, saw it running, and asked to push it ("Súbelo a GitHub"). The PR was opened; **merging is the owner's call** (ask first).
+**History of the design:** 1st plain → 2nd "classy" (navy, serif, serrated seal, rotary knob), which the owner rejected on 2026-11-25 as "looks made by an AI" → **3rd "tool" design** (dark by default, monochrome, square corners, everything visible). The owner approved the 3rd design spec, saw it running, asked to push it, and on 2026-11-26 asked to fix the pending issues and make it the version on GitHub (merged).
 
-**Servers:** nothing of ours is guaranteed to be running. The worktree server on port 8001 was **stopped by Claude Code because the machine ran low on memory** (not an app failure). Port 8000 may still be serving the old 2nd design from the main checkout. Start servers only when asked.
+**Servers:** none are running. Start servers only when the owner agrees (the machine can run low on memory). For the UI test, the worktree server on port 8001 was started and stopped again on 2026-11-26; use `http://127.0.0.1:8001` (on this machine `localhost` from PowerShell may not reach uvicorn).
 
 **Also made:** an editable architecture whiteboard (Claude artifact, private until the owner shares it): https://claude.ai/artifact/MYiLjvCHMbxYKbG3Ck6kDE. It shows the prototype and the production target, with square boxes and steps 1–4.
 
@@ -56,7 +55,7 @@ cd web; npx tsc --noEmit; npm run build
 - **`gh` is at `C:\Program Files\GitHub CLI\gh.exe`**, authenticated as `vegarios-spec`. Call it from **PowerShell** (`& "C:\Program Files\GitHub CLI\gh.exe" …`): in a worktree-isolated session the Bash guard rejects commands whose path contains "GitHub", and anything with `cd …` before git, `git -C <other folder>`, or the word `.gitignore`. Use plain, separate git commands.
 - The main venv (`C:\Users\Elias\vinoscore\.venv`, Python 3.14) is shared: the worktree has no venv of its own. Use `PYTHONUTF8=1` when printing accents.
 - Playwright + Chromium are installed in that venv.
-- Diagrams were exported with `@mermaid-js/mermaid-cli` from a temporary folder; how to redo it is in `docs/arquitectura.md`. The exported image still says "perilla" on one arrow.
+- Diagrams are exported with `@mermaid-js/mermaid-cli` (via `npx`, from a temporary folder) using Playwright's Chromium through `-p pp.json` with `{"executablePath": "%LOCALAPPDATA%\\ms-playwright\\chromium-*\\chrome-win64\\chrome.exe"}` and `PUPPETEER_SKIP_DOWNLOAD=1`; details in `docs/arquitectura.md`. Downloading the npm package needs the owner's OK (auto mode blocked it once).
 - `npm audit`: 4 moderate findings in build-only tooling (`workbox-build` → `glob`/`minimatch`). They never ship; left alone on purpose.
 - The machine can run low on memory; background servers may get stopped.
 
@@ -112,13 +111,8 @@ docs/superpowers/               design spec and implementation plan
 
 ## 8. Next steps (suggested order)
 
-1. **Owner decides on PR #1.** If they want it merged: merge on GitHub (or ask Claude), then update the main checkout. Its 34 uncommitted files are the 2nd design, already included in commit `28d1fd0`, so they can be discarded. **Confirm with the owner before discarding them**, then `git pull`. After that the worktree can be removed.
-2. **Small fixes found by the final review, deliberately deferred** (none block use):
-   - The empty lot-card text says "con estos filtros" even when the period is just empty or `/variables` failed (`web/src/vistas/Sergio.tsx`).
-   - If `/configuracion` fails, the band shows the cost-format alert and "Calculando…" instead of only the load error (`Regla.tsx`).
-   - A failed rule-save message is not cleared by a later successful save (`Regla.tsx`).
-   - Accessibility: `aria-selected` on plain `<tr>` is ignored (use `aria-current` on the row button); no IME `isComposing` check in the Enter handler and the last capture field shows `enterKeyHint="next"` (`Enologa.tsx`); the 19 chart bars are separate Tab stops (`Regla.tsx`).
-   - Re-export the architecture diagram so the arrow says "regla y simulador" instead of "perilla y simulador".
+1. ~~PR #1~~ merged 2026-11-26. Optional: remove the worktree and the `worktree-rediseno-oscuro` branch (ask the owner first).
+2. ~~Small fixes from the final review~~ **done 2026-11-26** (commit `cff12bf` and following): per-cause empty lot-card text; `/configuracion` failure shows only its own alert; save error cleared on success; `aria-current` on the selected row's button (`data-elegido` on the `<tr>` for tests); IME-safe Enter and `enterKeyHint="done"` on the last field; the cost chart is one Tab stop (`radiogroup`, arrows/Home/End, square focus box); `dt` before `dd` in the rule figures; unused `oscuro` prop removed; diagram re-exported ("regla y simulador"). The UI test covers the new behavior; last full run "Todo bien".
 3. **Accessibility pass** with a screen reader or axe, in both themes.
 4. **Open questions for Sergio / the team** (also in `docs/ruta_a_produccion.md`, marked ❓): which lab analyses the winery really measures and in what units; historical lots with tasting scores; what he considers "prometedor"; real costs for the decision rule; tank and lot naming; who captures, on what device and connectivity; reports needed; users and roles; final name/logo; presentation date; dataset source.
 5. **Roadmap** (in `ruta_a_produccion.md`, none started): Supabase/PostgreSQL + Alembic, real login with roles, native Expo app, hosting with HTTPS, retraining with winery data + calibration + SHAP, tasting feedback loop, monthly reports, Sentry, audit log, privacy notice (LFPDPPP).
