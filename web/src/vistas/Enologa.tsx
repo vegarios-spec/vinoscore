@@ -125,7 +125,8 @@ interface DatosResultado {
 
 /** Enter pasa al siguiente campo; en el último, guarda. Así se captura sin soltar el teclado. */
 function alEnter(e: KeyboardEvent<HTMLInputElement>) {
-  if (e.key !== "Enter") return;
+  // Mientras un teclado de composición (dictado, acentos, IME) arma el texto, Enter confirma esa palabra.
+  if (e.key !== "Enter" || e.nativeEvent.isComposing || e.keyCode === 229) return;
   e.preventDefault();
   const form = e.currentTarget.form;
   if (!form) return;
@@ -151,6 +152,7 @@ function Captura({
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const grupos = useMemo(() => agrupar(variables), [variables]);
+  const ultimaClave = grupos.at(-1)?.vars.at(-1)?.clave;
   const primerCampo = useRef<HTMLInputElement>(null);
 
   useEffect(() => primerCampo.current?.focus(), []);
@@ -228,6 +230,7 @@ function Captura({
                 valor={textos[v.clave] ?? ""}
                 onCambio={(t) => setTextos((x) => ({ ...x, [v.clave]: t }))}
                 falta={intento && n === null}
+                ultimo={v.clave === ultimaClave}
                 aviso={n !== null && fueraDeRango(n, v) ? "Se ve fuera de lo normal. Revisa que esté bien capturado." : undefined}
               />
             );
@@ -257,10 +260,11 @@ function Captura({
 }
 
 function Campo({
-  id, etiqueta, valor, onCambio, unidad, ayuda, normal, aviso, falta, texto, placeholder, ref,
+  id, etiqueta, valor, onCambio, unidad, ayuda, normal, aviso, falta, texto, placeholder, ultimo, ref,
 }: {
   id: string; etiqueta: string; valor: string; onCambio: (t: string) => void;
   unidad?: string; ayuda?: string; normal?: string; aviso?: string; falta?: boolean; texto?: boolean; placeholder?: string;
+  ultimo?: boolean; // en el último campo, Enter guarda: el teclado muestra "Listo" en vez de "Siguiente"
   ref?: React.Ref<HTMLInputElement>;
 }) {
   const describe = [ayuda && `${id}-ayuda`, normal && `${id}-normal`, aviso && `${id}-aviso`].filter(Boolean).join(" ");
@@ -282,7 +286,7 @@ function Campo({
           inputMode={texto ? "text" : "decimal"}
           autoComplete="off"
           autoCapitalize={texto ? "characters" : "off"}
-          enterKeyHint="next"
+          enterKeyHint={ultimo ? "done" : "next"}
           placeholder={placeholder}
           aria-invalid={falta || undefined}
           aria-describedby={describe || undefined}

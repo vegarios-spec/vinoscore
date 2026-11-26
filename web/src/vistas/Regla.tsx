@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import { api } from "../api";
 import type { Configuracion, FilaPerilla, Perilla } from "../tipos";
 import { Boton } from "../ui";
@@ -39,9 +40,31 @@ function Grafica({
   const bw = slot * 0.66;
   const activoCercano = filas.reduce((a, f) => (Math.abs(f.umbral - activo) < Math.abs(a.umbral - activo) ? f : a)).umbral;
 
+  // Una sola parada de Tab para toda la gráfica: las flechas recorren los umbrales.
+  const iSel = Math.max(0, filas.findIndex((f) => igual(f.umbral, seleccionado)));
+  const svg = useRef<SVGSVGElement>(null);
+  const moverFoco = useRef(false);
+  useEffect(() => {
+    if (!moverFoco.current) return;
+    moverFoco.current = false;
+    svg.current?.querySelector<SVGGElement>(`[data-indice="${iSel}"]`)?.focus();
+  }, [iSel]);
+  const teclas = (e: KeyboardEvent<SVGGElement>, i: number) => {
+    const destino = { ArrowLeft: i - 1, ArrowDown: i - 1, ArrowRight: i + 1, ArrowUp: i + 1, Home: 0, End: filas.length - 1 }[e.key];
+    if (destino !== undefined) {
+      e.preventDefault();
+      const j = Math.min(filas.length - 1, Math.max(0, destino));
+      moverFoco.current = j !== iSel;
+      onElegir(filas[j].umbral);
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onElegir(filas[i].umbral);
+    }
+  };
+
   return (
     <figure className="min-w-0">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="group" aria-label="Costo esperado por cada 100 lotes, según el umbral">
+      <svg ref={svg} viewBox={`0 0 ${W} ${H}`} className="w-full" role="radiogroup" aria-label="Costo esperado por cada 100 lotes, según el umbral. Usa las flechas para cambiar de umbral.">
         {[0, 1, 2, 3].map((i) => (
           <g key={i}>
             <line x1={M.i} x2={W - M.d} y1={y(paso * i)} y2={y(paso * i)} stroke="var(--linea)" strokeWidth={1} />
@@ -60,21 +83,17 @@ function Grafica({
           return (
             <g
               key={f.umbral}
-              role="button"
-              tabIndex={0}
+              data-indice={i}
+              role="radio"
+              tabIndex={i === iSel ? 0 : -1}
               aria-label={etiqueta}
-              aria-pressed={esSel}
+              aria-checked={esSel}
               onClick={() => onElegir(f.umbral)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onElegir(f.umbral);
-                }
-              }}
+              onKeyDown={(e) => teclas(e, i)}
               className="cursor-pointer"
             >
               <title>{etiqueta}</title>
-              <rect x={M.i + i * slot} y={M.s} width={slot} height={alto + M.b} fill="transparent" />
+              <rect className="foco" x={M.i + i * slot + 0.5} y={M.s + 0.5} width={slot - 1} height={alto + M.b - 1} fill="transparent" />
               <rect
                 x={x} y={yy} width={bw} height={Math.max(M.s + alto - yy, 1)}
                 fill={esSel ? "var(--texto)" : esRec ? "var(--suave)" : "var(--linea-fuerte)"}
@@ -125,9 +144,10 @@ function CampoPesos({
 
 function Dato({ valor, texto }: { valor: string; texto: string }) {
   return (
-    <div className="min-w-0">
-      <dd className="text-xl font-medium leading-none tabular">{valor}</dd>
+    // dt antes que dd (orden correcto para lectores de pantalla); se ve la cifra arriba con flex-col-reverse.
+    <div className="flex min-w-0 flex-col-reverse">
       <dt className="mt-1.5 text-xs text-suave">{texto}</dt>
+      <dd className="text-xl font-medium leading-none tabular">{valor}</dd>
     </div>
   );
 }
@@ -145,6 +165,7 @@ export function Regla({ onConfigCambia }: { onConfigCambia: (c: Configuracion) =
   const [umbral, setUmbral] = useState<number | null>(null);
   const [errorCfg, setErrorCfg] = useState<string | null>(null);
   const [errorCalc, setErrorCalc] = useState<string | null>(null);
+  const [errorGuardar, setErrorGuardar] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
@@ -190,6 +211,7 @@ export function Regla({ onConfigCambia }: { onConfigCambia: (c: Configuracion) =
     if (!costosValidos || umbral === null) return;
     setGuardando(true);
     setMensaje(null);
+    setErrorGuardar(null);
     try {
       const c = await api.guardarConfiguracion({
         umbral_activo: umbral,
@@ -201,7 +223,7 @@ export function Regla({ onConfigCambia }: { onConfigCambia: (c: Configuracion) =
       setMensaje(`Regla activada: Prometedor desde ${num(umbral, 2)}.`);
       onConfigCambia(c);
     } catch {
-      setErrorCalc("No se pudo guardar la regla. Intenta de nuevo.");
+      setErrorGuardar("No se pudo guardar la regla. Intenta de nuevo.");
     } finally {
       setGuardando(false);
     }
@@ -210,6 +232,7 @@ export function Regla({ onConfigCambia }: { onConfigCambia: (c: Configuracion) =
   const elegir = (u: number) => {
     setUmbral(redondear(u));
     setMensaje(null);
+    setErrorGuardar(null);
   };
   const diferencia = data && fila ? fila.costo_por_100_lotes - data.recomendado.costo_por_100_lotes : 0;
 
@@ -219,16 +242,24 @@ export function Regla({ onConfigCambia }: { onConfigCambia: (c: Configuracion) =
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
           <h2 id="regla-titulo" className="text-lg font-medium">Regla de decisión</h2>
           <p className="text-sm text-suave">
-            {cfg ? <>Activa: Prometedor desde <strong className="font-medium text-texto tabular">{num(cfg.umbral_activo, 2)}</strong></> : errorCfg ?? " "}
+            {cfg && <>Activa: Prometedor desde <strong className="font-medium text-texto tabular">{num(cfg.umbral_activo, 2)}</strong></>}
           </p>
         </div>
 
+        {errorCfg && (
+          <p role="alert" className="mt-3 border-l-2 border-rojo pl-3 text-sm font-medium">
+            {errorCfg} Revisa que el servidor esté encendido y recarga la página.
+          </p>
+        )}
+
+        {/* Sin la regla activa no hay qué ajustar: solo se muestra el aviso de arriba. */}
+        {!errorCfg && (
         <div className="mt-4 grid gap-x-8 gap-y-6 md:grid-cols-2 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1fr)_minmax(0,0.95fr)_minmax(0,1.3fr)]">
           {/* Costos */}
           <div className="space-y-3">
             <CampoPesos id="costo-fp" etiqueta="Costo de un falso Premium" ayuda="Por lote: devoluciones, reputación o margen perdido." valor={fp} onCambio={setFp} />
             <CampoPesos id="costo-fn" etiqueta="Costo de un buen vino vendido como estándar" ayuda="Por lote: diferencia de precio que se deja de ganar." valor={fn} onCambio={setFn} />
-            {costosValidos ? (
+            {!cfg ? null : costosValidos ? (
               <p className="text-xs text-suave">Los valores iniciales son de ejemplo. Reemplázalos por los de la bodega.</p>
             ) : (
               <p role="alert" className="text-xs font-medium text-rojo">Escribe los dos costos como cantidades de cero o más, por ejemplo 1,500.</p>
@@ -316,9 +347,11 @@ export function Regla({ onConfigCambia }: { onConfigCambia: (c: Configuracion) =
               </Boton>
               <p role="status" className="text-sm text-verde">{mensaje}</p>
             </div>
+            {errorGuardar && <p role="alert" className="mt-2 border-l-2 border-rojo pl-3 text-sm font-medium">{errorGuardar}</p>}
             {data && <p className="mt-2 text-xs text-suave">{data.nota}</p>}
           </div>
         </div>
+        )}
       </div>
     </section>
   );

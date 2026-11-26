@@ -86,6 +86,15 @@ body {
   outline-offset: 2px;
 }
 
+/* Gráfica de la regla: el contorno de foco de un elemento SVG no siempre se dibuja; se marca la columna. */
+[data-indice]:focus {
+  outline: none;
+}
+[data-indice]:focus-visible .foco {
+  stroke: var(--texto);
+  stroke-width: 1.5;
+}
+
 .tabular {
   font-variant-numeric: tabular-nums lining-nums;
 }

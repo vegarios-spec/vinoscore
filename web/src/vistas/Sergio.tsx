@@ -106,6 +106,14 @@ export function VistaSergio({
       <FichaLote key={actual.id} resumen={actual} variables={variables} umbral={umbral} onDecidido={() => setVersion((v) => v + 1)} />
     ) : null;
 
+  // Qué decir cuando la ficha no puede mostrar un lote: cada causa con su propio texto.
+  const fichaVacia: { titulo: string; detalle?: string } =
+    error ? { titulo: "No se pudo cargar la lista de lotes.", detalle: "Revisa que el servidor esté encendido y recarga la página." }
+    : !lotes ? { titulo: "Cargando…" }
+    : actual && !variables ? { titulo: "No se pudo cargar la lista de análisis.", detalle: "Sin ella no se puede mostrar la ficha. Recarga la página." }
+    : hayFiltros ? { titulo: "No hay lotes con estos filtros.", detalle: "Cambia la búsqueda, el semáforo o el tanque para ver un lote aquí." }
+    : { titulo: "No hay lotes en este periodo.", detalle: "Amplía el periodo para ver lotes más antiguos." };
+
   return (
     <>
       <Cabecera rol={rol} onRol={onRol} nombre={nombre} onNombre={onNombre} />
@@ -229,7 +237,7 @@ export function VistaSergio({
                               key={l.id}
                               data-codigo={l.codigo}
                               data-semaforo={l.semaforo ?? ""}
-                              aria-selected={sel}
+                              data-elegido={sel || undefined}
                               onClick={() => elegir(l)}
                               className={`cursor-pointer border-b border-linea last:border-b-0 hover:bg-realce ${sel ? "bg-realce shadow-[inset_2px_0_0_var(--texto)]" : ""}`}
                             >
@@ -240,6 +248,7 @@ export function VistaSergio({
                                     e.stopPropagation();
                                     elegir(l);
                                   }}
+                                  aria-current={sel || undefined}
                                   className="flex max-w-full items-center gap-2 text-left font-medium"
                                 >
                                   <span className="truncate">{l.codigo}</span>
@@ -284,8 +293,8 @@ export function VistaSergio({
               <aside className="sticky top-[4.5rem] max-h-[calc(100dvh-5.5rem)] overflow-y-auto border border-linea p-5">
                 {ficha ?? (
                   <section aria-label="Ficha del lote">
-                    <p className="text-sm font-medium">{lotes ? "No hay lotes con estos filtros." : "Cargando…"}</p>
-                    {lotes && <p className="mt-1 text-sm text-suave">Cambia la búsqueda, el periodo o el tanque para ver un lote aquí.</p>}
+                    <p className="text-sm font-medium">{fichaVacia.titulo}</p>
+                    {fichaVacia.detalle && <p className="mt-1 text-sm text-suave">{fichaVacia.detalle}</p>}
                   </section>
                 )}
               </aside>

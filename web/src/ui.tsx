@@ -72,7 +72,7 @@ export function BarraProbabilidad({
 }
 
 /** Factores que más pesaron en el resultado. */
-export function ListaRazones({ razones, nota }: { razones: Razon[]; nota?: string; oscuro?: boolean }) {
+export function ListaRazones({ razones, nota }: { razones: Razon[]; nota?: string }) {
   return (
     <section>
       <h3 className="text-base font-medium text-texto">Factores principales</h3>

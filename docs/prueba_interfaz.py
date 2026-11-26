@@ -188,7 +188,25 @@ def seccion_sergio(nav, url: str) -> None:
     filas.nth(2).click()
     pg.wait_for_timeout(500)
     revisar(codigo_ficha(pg).startswith(f"Lote {tercero}"), "clic en otra fila cambia la ficha")
-    revisar(filas.nth(2).get_attribute("aria-selected") == "true", "la fila elegida queda marcada")
+    revisar(filas.nth(2).get_attribute("data-elegido") == "true"
+            and filas.nth(2).locator("button").first.get_attribute("aria-current") == "true",
+            "la fila elegida queda marcada (y su botón lo anuncia con aria-current)")
+    revisar(pg.locator("tbody tr[data-elegido]").count() == 1, "solo una fila queda marcada")
+
+    # Gráfica de la regla: una sola parada de Tab; las flechas cambian el umbral.
+    barras = pg.locator("[data-indice]")
+    revisar(barras.count() == 19 and pg.locator("[data-indice][tabindex='0']").count() == 1,
+            "la gráfica es una sola parada de Tab (19 barras, una enfocable)")
+    antes = pg.locator("#umbral").input_value()
+    pg.locator("[data-indice][tabindex='0']").focus()
+    pg.keyboard.press("ArrowLeft")
+    pg.wait_for_timeout(200)
+    despues = pg.locator("#umbral").input_value()
+    revisar(abs(float(despues) - (float(antes) - 0.05)) < 1e-6, f"flecha izquierda en la gráfica baja el umbral ({antes} a {despues})")
+    revisar(pg.evaluate("document.activeElement.getAttribute('aria-checked')") == "true", "el foco sigue a la barra elegida")
+    pg.keyboard.press("ArrowRight")
+    pg.wait_for_timeout(200)
+    revisar(pg.locator("#umbral").input_value() == antes, "flecha derecha regresa al umbral anterior")
 
     # Simulador.
     # Hacia abajo: los lotes más prometedores suelen tener el alcohol cerca del tope del control.
@@ -255,6 +273,21 @@ def seccion_sergio(nav, url: str) -> None:
     filas.nth(1).click()
     pg.wait_for_timeout(500)
     revisar(codigo_ficha(pg).startswith(f"Lote {segundo}"), "si /perilla falla, la tabla y la ficha siguen")
+    ctx.close()
+
+    # Falla de /configuracion: la banda solo dice eso (sin aviso de costos ni "Calculando…").
+    ctx = nav.new_context(viewport={"width": 1440, "height": 900})
+    pg = ctx.new_page()
+    pg.set_default_timeout(8000)
+    pg.route("**/configuracion", lambda r: r.fulfill(status=500, body="{}"))
+    pg.goto(url + "/?rol=sergio")
+    pg.wait_for_load_state("networkidle")
+    pg.wait_for_timeout(800)
+    banda = pg.locator("section[aria-labelledby='regla-titulo']")
+    revisar(banda.get_by_text("No se pudo cargar la regla activa.").count() > 0, "si /configuracion falla, la banda lo dice")
+    revisar(banda.get_by_text("Escribe los dos costos").count() == 0 and banda.get_by_text("Calculando").count() == 0,
+            "si /configuracion falla, no aparece el aviso de costos ni 'Calculando…'")
+    revisar(pg.locator("tbody tr[data-codigo]").count() > 0, "si /configuracion falla, la tabla sigue")
     ctx.close()
 
     # Pantalla angosta: la ficha se abre encima y Esc la cierra.

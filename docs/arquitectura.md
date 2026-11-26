@@ -61,7 +61,7 @@ flowchart TB
   OA -- "<b>3 probabilidad<br/>y semáforo</b>" --> OE
   OA <-- "lee y guarda<br/>el resultado" --> OD
   OS -- "<b>4 consulta y decide</b>" --> OD
-  OS -. "perilla y simulador" .-> OA
+  OS -. "regla y simulador" .-> OA
   OA -.-> OM
 
   classDef app fill:#ffffff,stroke:#0F7C7A,stroke-width:3px,color:#1B3A57
